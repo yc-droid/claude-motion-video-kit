@@ -22,7 +22,7 @@ This repo collects what we learned from real builds: the process that works, the
 You need: macOS or Linux, [Node 22+](https://nodejs.org), ffmpeg, and [Claude Code](https://code.claude.com/docs/en/overview).
 
 ```bash
-git clone https://github.com/<owner>/claude-motion-video-kit.git
+git clone https://github.com/yc-droid/claude-motion-video-kit.git
 cd claude-motion-video-kit
 sh scripts/setup.sh
 sh scripts/fetch-example-assets.sh
