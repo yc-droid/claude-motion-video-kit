@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Inter Tight";
+          src: url("../assets/fonts/InterTight-Var.woff2") format("woff2");
+          font-weight: 100 900;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+          font-weight: 700;
+        }
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #121212;
+          font-family: "Inter Tight", sans-serif;
+        }
+        .s6-panel {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+        }
+        .s6-word {
+          position: absolute;
+          left: 0;
+          right: 0;
+          text-align: center;
+          font-weight: 800;
+          letter-spacing: -0.045em;
+          line-height: 1;
+          white-space: nowrap;
+          will-change: transform;
+        }
+        .s6-tag {
+          position: absolute;
+          left: 0;
+          right: 0;
+          text-align: center;
+          font-family: "JB Mono", monospace;
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          white-space: nowrap;
+          line-height: 1;
+        }
+        .s6-x {
+          position: absolute;
+          overflow: visible;
+        }
+        .s6-x line {
+          stroke-width: 24;
+          stroke-linecap: butt;
+        }
+        #s6-badge {
+          position: absolute;
+          left: 470px;
+          top: 250px;
+          width: 140px;
+          height: 140px;
+          border-radius: 70px;
+          background: #ffffff;
+          will-change: transform;
+        }
+        #s6-badge svg {
+          position: absolute;
+          left: 30px;
+          top: 34px;
+          width: 80px;
+          height: 72px;
+          overflow: visible;
+        }
+      </style>
+
+      <div id="root" data-composition-id="s6-strobe" data-width="1080" data-height="1080">
+        <div class="s6-panel" id="s6-p0" style="background: #121212">
+          <div class="s6-word" id="s6-w0" style="top: 424px; font-size: 258px; color: #f2f0eb">AGENCY</div>
+          <div class="s6-tag" style="top: 740px; color: #a8a399">PAYS FOR HOURS</div>
+          <svg class="s6-x" id="s6-x0" style="left: 90px; top: 380px" width="900" height="330">
+            <line class="a" x1="0" y1="0" x2="900" y2="330" stroke="#f04a2a" />
+            <line class="b" x1="900" y1="0" x2="0" y2="330" stroke="#f04a2a" />
+          </svg>
+        </div>
+        <div class="s6-panel" id="s6-p1" style="background: #f2f0eb">
+          <div class="s6-word" id="s6-w1" style="top: 380px; font-size: 380px; color: #121212">HIRE</div>
+          <div class="s6-tag" style="top: 770px; color: #6e6a62">MONTHS TO RAMP</div>
+          <svg class="s6-x" id="s6-x1" style="left: 150px; top: 360px" width="780" height="380">
+            <line class="a" x1="0" y1="0" x2="780" y2="380" stroke="#f04a2a" />
+            <line class="b" x1="780" y1="0" x2="0" y2="380" stroke="#f04a2a" />
+          </svg>
+        </div>
+        <div class="s6-panel" id="s6-p2" style="background: #f04a2a">
+          <div class="s6-word" id="s6-w2" style="top: 440px; font-size: 214px; color: #ffffff">RETAINER</div>
+          <div class="s6-tag" style="top: 720px; color: #121212">RENT, BILLED MONTHLY</div>
+          <svg class="s6-x" id="s6-x2" style="left: 70px; top: 400px" width="940" height="290">
+            <line class="a" x1="0" y1="0" x2="940" y2="290" stroke="#121212" />
+            <line class="b" x1="940" y1="0" x2="0" y2="290" stroke="#121212" />
+          </svg>
+        </div>
+        <div class="s6-panel" id="s6-p3" style="background: #2b4bff">
+          <div id="s6-badge">
+            <svg viewBox="0 0 80 72"><path id="s6-check" d="M6 38 L30 62 L74 10" fill="none" stroke="#2b4bff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          </div>
+          <div class="s6-word" id="s6-w3" style="top: 450px; font-size: 206px; color: #ffffff">ENGINEER</div>
+          <div class="s6-tag" style="top: 712px; color: #ffffff">AI + 1 HUMAN · OWNS THE OUTCOME</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const spring = (z, k) => {
+            if (z >= 0.999) return (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-k * p) * (1 + k * p));
+            const wd = k * Math.sqrt(1 - z * z);
+            return (p) => {
+              if (p <= 0) return 0;
+              if (p >= 1) return 1;
+              return 1 - Math.exp(-z * k * p) * (Math.cos(wd * p) + ((z * k) / wd) * Math.sin(wd * p));
+            };
+          };
+          const SPR = spring(0.75, 12);
+          const BEAT = 1.951333 / 4;
+          const tl = gsap.timeline({ paused: true });
+
+          // measure the strokes once (static svg geometry, no layout dependency)
+          document.querySelectorAll(".s6-x line").forEach((l) => {
+            const len = Math.hypot(l.x2.baseVal.value - l.x1.baseVal.value, l.y2.baseVal.value - l.y1.baseVal.value);
+            l.style.strokeDasharray = len + " " + len;
+            l.style.strokeDashoffset = String(len);
+            l.dataset.len = String(len);
+          });
+          const check = document.getElementById("s6-check");
+          const cLen = 34 + 68 + 2; // two legs of the tick, approx
+          check.style.strokeDasharray = cLen + " " + cLen;
+          check.style.strokeDashoffset = String(cLen);
+
+          for (let k = 0; k < 4; k++) {
+            const at = k * BEAT;
+            // hard cut in, hard cut out
+            tl.set("#s6-p" + k, { opacity: 1 }, at);
+            if (k < 3) tl.set("#s6-p" + k, { opacity: 0 }, at + BEAT);
+            // the word lands with a short punch (sharp by the time it can be read)
+            tl.fromTo("#s6-w" + k, { scale: k === 3 ? 1.14 : 1.07 }, { scale: 1, duration: k === 3 ? 0.4 : 0.26, ease: k === 3 ? SPR : "expo.out" }, at);
+            if (k < 3) {
+              // the cross stamps on the 8th note: two fast strokes
+              const a = document.querySelector("#s6-x" + k + " .a");
+              const b = document.querySelector("#s6-x" + k + " .b");
+              tl.fromTo(a, { strokeDashoffset: a.dataset.len }, { strokeDashoffset: 0, duration: 0.07, ease: "power2.out" }, at + BEAT / 2);
+              tl.fromTo(b, { strokeDashoffset: b.dataset.len }, { strokeDashoffset: 0, duration: 0.07, ease: "power2.out" }, at + BEAT / 2 + 0.05);
+              tl.fromTo("#s6-x" + k, { scale: 1.06 }, { scale: 1, duration: 0.2, ease: "expo.out", transformOrigin: "50% 50%" }, at + BEAT / 2);
+              tl.fromTo("#s6-w" + k, { opacity: 1 }, { opacity: 0.55, duration: 0.12, ease: "power1.out", immediateRender: false }, at + BEAT / 2 + 0.04);
+            }
+          }
+          // the tick
+          const E = 3 * BEAT;
+          tl.fromTo("#s6-badge", { scale: 0 }, { scale: 1, duration: 0.42, ease: SPR }, E + 0.04);
+          tl.fromTo(check, { strokeDashoffset: cLen }, { strokeDashoffset: 0, duration: 0.18, ease: "power2.out" }, E + 0.1);
+
+          window.__timelines["s6-strobe"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

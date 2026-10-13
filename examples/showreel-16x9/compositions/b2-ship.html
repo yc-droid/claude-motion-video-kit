@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Montserrat";
+          src: url("../assets/fonts/Montserrat-Var.ttf") format("truetype");
+          font-weight: 100 900;
+        }
+        #b2-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #e9432f;
+        }
+        #b2-stage {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        .b2-w {
+          position: absolute;
+          left: 0;
+          top: 0;
+          font-family: "Montserrat", sans-serif;
+          font-weight: 900;
+          font-size: 214px;
+          line-height: 1;
+          letter-spacing: -0.015em;
+          color: #121214;
+          white-space: nowrap;
+        }
+        .b2-l {
+          display: inline-block;
+        }
+        #b2-line1 {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        #b2-mask {
+          position: absolute;
+          overflow: hidden;
+          left: 0;
+          top: 0;
+          width: 1920px;
+          height: 240px;
+        }
+        .b2-br {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 46px;
+          height: 46px;
+          border: 0 solid #121214;
+        }
+        #b2-period {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: #121214;
+        }
+        #b2-ink {
+          position: absolute;
+          inset: 0;
+          background: #111113;
+          opacity: 0;
+        }
+        #b2-dotwrap {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 32px;
+          height: 32px;
+        }
+        #b2-dot {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: #e9432f;
+        }
+      </style>
+      <div id="b2-root" data-composition-id="b2-ship" data-width="1920" data-height="1080">
+        <div id="b2-stage">
+          <div id="b2-line1">
+            <div class="b2-w" id="b2-wship" data-hf-motion-blur='{"samplesPerFrame": 8}'>SHIP</div>
+            <div class="b2-w" id="b2-every"><span class="b2-l" id="b2-e0" data-hf-motion-blur='{"samplesPerFrame": 8}'>E</span><span class="b2-l" id="b2-e1" data-hf-motion-blur='{"samplesPerFrame": 8}'>V</span><span class="b2-l" id="b2-e2" data-hf-motion-blur='{"samplesPerFrame": 8}'>E</span><span class="b2-l" id="b2-e3" data-hf-motion-blur='{"samplesPerFrame": 8}'>R</span><span class="b2-l" id="b2-e4" data-hf-motion-blur='{"samplesPerFrame": 8}'>Y</span></div>
+            <div class="b2-br" id="b2-br-tl" style="border-left-width: 8px; border-top-width: 8px"></div>
+            <div class="b2-br" id="b2-br-tr" style="border-right-width: 8px; border-top-width: 8px"></div>
+            <div class="b2-br" id="b2-br-bl" style="border-left-width: 8px; border-bottom-width: 8px"></div>
+            <div class="b2-br" id="b2-br-br" style="border-right-width: 8px; border-bottom-width: 8px"></div>
+          </div>
+          <div id="b2-mask">
+            <div class="b2-w" id="b2-week"><span class="b2-l" id="b2-w0">W</span><span class="b2-l" id="b2-w1">E</span><span class="b2-l" id="b2-w2">E</span><span class="b2-l" id="b2-w3">K</span></div>
+          </div>
+          <div id="b2-period"></div>
+        </div>
+        <div id="b2-ink"></div>
+        <div id="b2-dotwrap"><div id="b2-dot"></div></div>
+      </div>
+      <script>
+        (function () {
+          const B = 60 / 128;
+          const FS = 214;
+          const $ = (id) => document.getElementById(id);
+
+          function build() {
+            // font metrics from the same font the DOM uses (line-height 1)
+            const mc = document.createElement("canvas").getContext("2d");
+            mc.font = "900 " + FS + "px Montserrat";
+            const m = mc.measureText("H");
+            const asc = m.fontBoundingBoxAscent, desc = m.fontBoundingBoxDescent;
+            const baseline = (FS - (asc + desc)) / 2 + asc; // px from box top
+            const capTop = baseline - m.actualBoundingBoxAscent;
+            const capH = m.actualBoundingBoxAscent;
+
+            const wShip = $("b2-wship").offsetWidth;
+            const wEvery = $("b2-every").offsetWidth;
+            const wWeek = $("b2-week").offsetWidth;
+            const GAP = 0.36 * FS; // room for the brackets
+            const PER = 40, PER_GAP = 0.05 * FS;
+            const blockW = Math.max(wShip + GAP + wEvery, wWeek + PER_GAP + PER);
+            const left = Math.round((1920 - blockW) / 2);
+            const LH = 0.98 * FS;
+            // final box tops: line1 cap centre at 540 - LH/2, line2 at 540 + LH/2
+            const capMid = capTop + capH / 2;
+            const top1 = Math.round(540 - LH / 2 - capMid);
+            const top2 = Math.round(540 + LH / 2 - capMid);
+            const singleTop = Math.round(540 - capMid);
+
+            const xShip = left, xEvery = left + wShip + GAP;
+            gsap.set("#b2-wship", { left: xShip, top: top1 + LH / 2 });
+            gsap.set("#b2-every", { left: xEvery, top: top1 + LH / 2 });
+            // brackets around EVERY (cap box + padding)
+            const pad = 0.16 * FS;
+            const bx0 = xEvery - pad, bx1 = xEvery + wEvery + pad * 0.7;
+            const by0 = top1 + LH / 2 + capTop - pad * 0.62, by1 = top1 + LH / 2 + baseline + pad * 0.62;
+            gsap.set("#b2-br-tl", { left: bx0, top: by0 });
+            gsap.set("#b2-br-tr", { left: bx1 - 46, top: by0 });
+            gsap.set("#b2-br-bl", { left: bx0, top: by1 - 46 });
+            gsap.set("#b2-br-br", { left: bx1 - 46, top: by1 - 46 });
+            // line 2 sits in a mask strip
+            const maskTop = top2 + capTop - 14;
+            gsap.set("#b2-mask", { top: maskTop, height: capH + 28 });
+            gsap.set("#b2-week", { left: left, top: top2 - maskTop });
+            const px = left + wWeek + PER_GAP + PER / 2;
+            const py = top2 + baseline - PER / 2;
+            gsap.set("#b2-period", { left: px - PER / 2, top: py - PER / 2 });
+            gsap.set("#b2-dotwrap", { left: px - 16, top: py - 16 });
+
+            const tl = gsap.timeline({ paused: true });
+            // phase A: SHIP lands alone, centred
+            const shipSoloX = (1920 - wShip) / 2 - xShip;
+            gsap.set("#b2-wship", { opacity: 0 });
+            tl.fromTo(
+              "#b2-wship",
+              { x: shipSoloX, y: 140, scale: 1.32, opacity: 1 },
+              { x: shipSoloX, y: 0, scale: 1, opacity: 1, duration: 0.34, ease: "expo.out" },
+              0.02,
+            );
+            // phase B: EVERY flies in letter by letter, SHIP makes room
+            tl.to("#b2-wship", { x: 0, duration: 0.42, ease: "expo.out" }, B);
+            const jy = [-130, 90, -60, 120, -100];
+            const jr = [-28, 22, -14, 26, -18];
+            for (let i = 0; i < 5; i++) {
+              tl.fromTo(
+                "#b2-e" + i,
+                { x: 760 + i * 70, y: jy[i], rotation: jr[i], opacity: 1 },
+                { x: 0, y: 0, rotation: 0, opacity: 1, duration: 0.36, ease: "expo.out" },
+                B + 0.02 + i * 0.032,
+              );
+            }
+            gsap.set("#b2-every", { opacity: 0 });
+            tl.set("#b2-every", { opacity: 1 }, B + 0.02);
+            // brackets snap in on the "and" of beat 2
+            const snapT = 0.745;
+            const bOff = [
+              ["#b2-br-tl", -70, -50, -40],
+              ["#b2-br-tr", 70, -50, 40],
+              ["#b2-br-bl", -70, 50, 40],
+              ["#b2-br-br", 70, 50, -40],
+            ];
+            for (const [sel, dx, dy, r] of bOff) {
+              gsap.set(sel, { opacity: 0 });
+              tl.fromTo(sel, { x: dx, y: dy, rotation: r, scale: 1.4, opacity: 1 }, { x: 0, y: 0, rotation: 0, scale: 1, opacity: 1, duration: 0.2, ease: "back.out(2.2)", immediateRender: false }, snapT - 0.06);
+            }
+            // whole first line rides at frame centre until line 2 arrives
+            tl.fromTo("#b2-line1", { y: 0 }, { y: -LH / 2, duration: 0.36, ease: "expo.inOut" }, 2 * B - 0.1);
+            // phase C: WEEK rises through the mask, the period drops in last
+            for (let i = 0; i < 4; i++) {
+              tl.fromTo("#b2-w" + i, { yPercent: 105 }, { yPercent: 0, duration: 0.3, ease: "expo.out" }, 2 * B + 0.06 + i * 0.03);
+            }
+            tl.fromTo("#b2-period", { scale: 0 }, { scale: 1, duration: 0.22, ease: "back.out(2)" }, 2 * B + 0.24);
+            // breathe: a slow push
+            tl.fromTo("#b2-stage", { scale: 1 }, { scale: 1.035, duration: 1.45 - 2 * B, ease: "none", transformOrigin: px + "px " + py + "px" }, 2 * B);
+            // phase D: push into the period, it becomes the black field
+            const dx = 960 - px, dy = 540 - py;
+            tl.to("#b2-stage", { scale: 70, x: dx, y: dy, duration: 0.4, ease: "expo.in", transformOrigin: px + "px " + py + "px" }, 1.45);
+            tl.fromTo("#b2-dotwrap", { x: 0, y: 0 }, { x: dx, y: dy, duration: 0.4, ease: "expo.in" }, 1.45);
+            tl.fromTo("#b2-dot", { scale: 0 }, { scale: 1, duration: 0.24, ease: "expo.out" }, 1.56);
+            tl.fromTo("#b2-ink", { opacity: 0 }, { opacity: 1, duration: 0.01 }, 1.84);
+            tl.to({}, { duration: 1.875 - tl.duration() > 0 ? 1.875 - tl.duration() : 0.001 }, tl.duration());
+            window.__timelines["b2-ship"] = tl;
+          }
+          document.fonts.load("900 214px Montserrat").then(build);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

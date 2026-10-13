@@ -1,0 +1,345 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Inter Tight";
+          src: url("../assets/fonts/InterTight-Var.woff2") format("woff2");
+          font-weight: 100 900;
+        }
+        @font-face {
+          font-family: "Instrument Serif";
+          src: url("../assets/fonts/InstrumentSerif-Italic.woff2") format("woff2");
+          font-style: italic;
+          font-weight: 400;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+          font-weight: 700;
+        }
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f2f0eb;
+          color: #121212;
+          font-family: "Inter Tight", sans-serif;
+        }
+        .s7-mono {
+          font-family: "JB Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          line-height: 1;
+          white-space: nowrap;
+        }
+        #s7-card {
+          position: absolute;
+          inset: 0;
+        }
+        #s7-k-l { position: absolute; left: 84px; top: 268px; font-weight: 700; }
+        #s7-k-r { position: absolute; right: 84px; top: 268px; color: #6e6a62; }
+        #s7-block {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1080px;
+          height: 1080px;
+          transform-origin: 84px 450px;
+        }
+        .s7-mask {
+          position: absolute;
+          left: 0;
+          right: 0;
+          height: 168px;
+          overflow: hidden;
+        }
+        .s7-line {
+          position: absolute;
+          left: 76px;
+          top: 8px;
+          font-size: 156px;
+          font-weight: 800;
+          letter-spacing: -0.05em;
+          line-height: 1;
+          white-space: nowrap;
+          will-change: transform;
+        }
+        #s7-dot {
+          display: inline-block;
+          color: #2b4bff;
+          transform-origin: 50% 80%;
+        }
+        #s7-rule {
+          position: absolute;
+          left: 84px;
+          right: 84px;
+          top: 652px;
+          height: 2px;
+          background: #121212;
+          transform-origin: left center;
+        }
+        .s7-sub {
+          position: absolute;
+          left: 84px;
+          font-family: "Instrument Serif", serif;
+          font-style: italic;
+          font-size: 58px;
+          line-height: 1;
+          white-space: nowrap;
+        }
+        .s7-sub em {
+          font-style: italic;
+          color: #2b4bff;
+        }
+
+        /* ---- loop reprise: an exact copy of frame 0 (keep in sync with s1-retainer.html) ---- */
+        #s7-ret {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+        }
+        .s1-kicker {
+          position: absolute;
+          top: 318px;
+          font-family: "JB Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          line-height: 1;
+          white-space: nowrap;
+        }
+        #s7r-k-l { left: 84px; font-weight: 700; }
+        #s7r-k-r { right: 84px; color: #6e6a62; }
+        #s7r-rule {
+          position: absolute;
+          left: 84px;
+          right: 84px;
+          top: 348px;
+          height: 2px;
+          background: #121212;
+        }
+        #s7r-mask {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 366px;
+          height: 216px;
+          overflow: hidden;
+        }
+        #s7r-word {
+          position: absolute;
+          left: 74px;
+          top: 6px;
+          font-size: 206px;
+          font-weight: 800;
+          letter-spacing: -0.035em;
+          line-height: 1;
+          white-space: nowrap;
+          will-change: transform;
+        }
+        #s7r-price {
+          position: absolute;
+          left: 84px;
+          top: 604px;
+          height: 132px;
+          display: flex;
+          align-items: flex-start;
+          font-size: 132px;
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          line-height: 1;
+          white-space: nowrap;
+          font-variant-numeric: tabular-nums;
+        }
+        .s7r-col {
+          display: block;
+          position: relative;
+          height: 132px;
+          width: 0.64em;
+          overflow: hidden;
+        }
+        .s7r-strip {
+          display: block;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          will-change: transform;
+        }
+        .s7r-strip b {
+          display: block;
+          height: 132px;
+          line-height: 132px;
+          font-weight: 700;
+          text-align: center;
+        }
+        .s7r-static {
+          display: block;
+          height: 132px;
+          line-height: 132px;
+        }
+        #s7r-per {
+          font-family: "Instrument Serif", serif;
+          font-style: italic;
+          font-weight: 400;
+          font-size: 104px;
+          letter-spacing: 0;
+          color: #6e6a62;
+          margin-left: 18px;
+          line-height: 150px;
+        }
+        #s7r-note {
+          position: absolute;
+          left: 84px;
+          top: 772px;
+          font-family: "JB Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #6e6a62;
+          white-space: nowrap;
+        }
+      </style>
+
+      <div id="root" data-composition-id="s7-end" data-width="1080" data-height="1080">
+        <svg width="0" height="0" style="position: absolute">
+          <defs>
+            <filter id="s7-vb0" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s7-vbg0" stdDeviation="0 0" /></filter>
+            <filter id="s7-vb1" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s7-vbg1" stdDeviation="0 0" /></filter>
+            <filter id="s7-vb2" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s7-vbg2" stdDeviation="0 0" /></filter>
+            <filter id="s7-vb3" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s7-vbg3" stdDeviation="0 0" /></filter>
+          </defs>
+        </svg>
+
+        <div id="s7-card">
+          <div id="s7-k-l" class="s7-mono">N° 02 · THE ANSWER</div>
+          <div id="s7-k-r" class="s7-mono">AI + 1 HUMAN</div>
+          <div id="s7-block">
+            <div class="s7-mask" style="top: 296px"><div class="s7-line" id="s7-l1">Marketing</div></div>
+            <div class="s7-mask" style="top: 446px"><div class="s7-line" id="s7-l2">engineering<span id="s7-dot">.</span></div></div>
+          </div>
+          <div id="s7-rule"></div>
+          <div class="s7-sub" id="s7-sub1" style="top: 694px">AI does the work.</div>
+          <div class="s7-sub" id="s7-sub2" style="top: 766px">A human <em>owns the outcome.</em></div>
+        </div>
+
+        <div id="s7-ret">
+          <div class="s1-kicker" id="s7r-k-l">N° 01 · LINE ITEM</div>
+          <div class="s1-kicker" id="s7r-k-r">BILLED MONTHLY</div>
+          <div id="s7r-rule"></div>
+          <div id="s7r-mask"><div id="s7r-word" data-hf-motion-blur>RETAINER</div></div>
+          <div id="s7r-price">
+            <span class="s7r-static">$</span>
+            <span class="s7r-col" id="s7r-c0"><span class="s7r-strip" data-layout-allow-overflow id="s7r-s0"></span></span>
+            <span class="s7r-static">,</span>
+            <span class="s7r-col" id="s7r-c1"><span class="s7r-strip" data-layout-allow-overflow id="s7r-s1"></span></span>
+            <span class="s7r-col" id="s7r-c2"><span class="s7r-strip" data-layout-allow-overflow id="s7r-s2"></span></span>
+            <span class="s7r-col" id="s7r-c3"><span class="s7r-strip" data-layout-allow-overflow id="s7r-s3"></span></span>
+            <span class="s7r-static" id="s7r-per">/mo</span>
+          </div>
+          <div id="s7r-note">TYPICAL US AGENCY RETAINER · ILLUSTRATIVE</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const spring = (z, k) => {
+            if (z >= 0.999) return (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-k * p) * (1 + k * p));
+            const wd = k * Math.sqrt(1 - z * z);
+            return (p) => {
+              if (p <= 0) return 0;
+              if (p >= 1) return 1;
+              return 1 - Math.exp(-z * k * p) * (Math.cos(wd * p) + ((z * k) / wd) * Math.sin(wd * p));
+            };
+          };
+          const SPR = spring(0.78, 11);
+          const BEAT = 1.951333 / 4;
+          const b = (k) => k * BEAT;
+          const END = 2.296; // local time of the loop seam (global 15.0)
+
+          // ---------- shared maths: identical to s1-retainer.html ----------
+          const RISE_A = -0.16, RISE_D = 0.56, RISE_Y = 230;
+          const riseEase = spring(0.8, 10);
+          const SPLIT = (0 - RISE_A) / RISE_D;
+          const S_SPLIT = riseEase(SPLIT);
+          const LINE = 132;
+          const TARGET = [6, 0, 0, 0];
+          const REVS = [1, 2, 3, 4];
+          const ROLL_A = -0.25;
+          const ROLL_D = [0.86, 0.94, 1.02, 1.1];
+          const rollEase = spring(0.82, 9);
+          const colPos = (i, tp) => (TARGET[i] + 10 * REVS[i]) * rollEase((tp - ROLL_A) / ROLL_D[i]);
+          const strips = [0, 1, 2, 3].map((i) => document.getElementById("s7r-s" + i));
+          const blurs = [0, 1, 2, 3].map((i) => document.getElementById("s7-vbg" + i));
+          strips.forEach((s, i) => {
+            let h = "";
+            const n = TARGET[i] + 10 * REVS[i];
+            for (let d = 0; d <= n + 2; d++) h += "<b>" + (d % 10) + "</b>";
+            s.innerHTML = h;
+            document.getElementById("s7r-c" + i).style.filter = "url(#s7-vb" + i + ")";
+          });
+          function paintRoll(tp) {
+            for (let i = 0; i < 4; i++) {
+              const p = colPos(i, tp);
+              const v = (colPos(i, tp + 1 / 120) - colPos(i, tp - 1 / 120)) * 60;
+              strips[i].style.transform = "translateY(" + (-p * LINE).toFixed(2) + "px)";
+              const bl = Math.min(16, Math.abs(v) * LINE * (1 / 60) * 0.45);
+              blurs[i].setAttribute("stdDeviation", "0 " + (bl < 0.15 ? 0 : bl.toFixed(2)));
+            }
+          }
+
+          const tl = gsap.timeline({ paused: true });
+
+          // ---------- end card ----------
+          tl.fromTo("#s7-l1", { y: 190 }, { y: 0, duration: 0.5, ease: SPR }, 0);
+          tl.fromTo("#s7-l2", { y: 190 }, { y: 0, duration: 0.5, ease: SPR }, 0.07);
+          tl.fromTo(["#s7-k-l", "#s7-k-r"], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.26, ease: "power3.out", stagger: 0.05 }, 0.12);
+          tl.fromTo("#s7-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "expo.out" }, 0.22);
+          tl.fromTo("#s7-sub1", { opacity: 0, y: 20, filter: "blur(9px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, b(1));
+          tl.fromTo("#s7-sub2", { opacity: 0, y: 20, filter: "blur(9px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, b(2));
+          // breathe: a slow push on the title block while it holds
+          tl.fromTo("#s7-block", { scale: 1 }, { scale: 1.022, duration: 1.45, ease: "sine.inOut" }, 0.5);
+          // the full stop ticks on the last beats
+          [3, 4].forEach((k) => {
+            tl.fromTo("#s7-dot", { scale: 1 }, { scale: 1.35, duration: 0.07, ease: "power2.out", immediateRender: false }, b(k));
+            tl.to("#s7-dot", { scale: 1, duration: 0.26, ease: SPR }, b(k) + 0.07);
+          });
+          // exit up through blur, then the loop reprise takes the frame
+          const OUT = 1.996;
+          tl.to("#s7-card", { y: -46, filter: "blur(8px)", duration: 0.12, ease: "power2.in" }, OUT);
+          tl.to("#s7-card", { opacity: 0, duration: 0.09, ease: "power1.in" }, OUT);
+
+          // ---------- loop reprise (ends exactly on frame 0's state) ----------
+          tl.fromTo("#s7-ret", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.12, ease: "power3.out" }, OUT + 0.09);
+          const riseStart = END + RISE_A; // 2.136
+          tl.fromTo(
+            "#s7r-word",
+            { y: RISE_Y },
+            {
+              y: RISE_Y * (1 - S_SPLIT),
+              duration: END - riseStart,
+              ease: (p) => riseEase(p * SPLIT) / S_SPLIT,
+            },
+            riseStart,
+          );
+          const drv = { v: 0 };
+          tl.to(drv, { v: 1, duration: END, ease: "none", onUpdate: () => paintRoll(tl.time() - END) }, 0);
+          paintRoll(-END);
+
+          window.__timelines["s7-end"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

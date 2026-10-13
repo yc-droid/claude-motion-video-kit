@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Source Serif";
+          src: url("../assets/fonts/SourceSerif4-Var.ttf") format("truetype");
+          font-weight: 200 900;
+        }
+        @font-face {
+          font-family: "Barlow";
+          src: url("../assets/fonts/Barlow-700.ttf") format("truetype");
+          font-weight: 700;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        #b8-mark-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #eeeae3;
+        }
+        #b8-word {
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 190px;
+          overflow: hidden;
+          font-family: "Source Serif", serif;
+          font-weight: 640;
+          font-variation-settings: "opsz" 60;
+          font-size: 136px;
+          line-height: 190px;
+          letter-spacing: -0.018em;
+          color: #141416;
+          white-space: nowrap;
+        }
+        .b8-l {
+          display: inline-block;
+        }
+        #b8-caps {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1920px;
+          text-align: center;
+          font-family: "Barlow", sans-serif;
+          font-weight: 700;
+          font-size: 27px;
+          letter-spacing: 0.42em;
+          color: #141416;
+          white-space: nowrap;
+          line-height: 1;
+        }
+        #b8-capsclip {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1920px;
+          height: 40px;
+          overflow: hidden;
+        }
+        #b8-meta {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1920px;
+          text-align: center;
+          font-family: "JB Mono", monospace;
+          font-size: 17px;
+          letter-spacing: 0.3em;
+          color: #6a665f;
+          white-space: nowrap;
+          line-height: 1;
+        }
+        #b8-iris {
+          position: absolute;
+          left: -190px;
+          top: -610px;
+          width: 2300px;
+          height: 2300px;
+          border-radius: 50%;
+          background: #111113;
+        }
+        #b8-dotwrap {
+          position: absolute;
+          left: 944px;
+          top: 524px;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: #e9432f;
+        }
+      </style>
+      <div id="b8-mark-root" data-composition-id="b8-mark" data-width="1920" data-height="1080">
+        <div id="b8-word"></div>
+        <div id="b8-capsclip"><div id="b8-caps">AI DOES THE WORK · A HUMAN OWNS THE OUTCOME</div></div>
+        <div id="b8-meta">900 FRAMES · 60 FPS · 128 BPM · 8 BARS</div>
+        <div id="b8-iris"></div>
+        <div id="b8-dotwrap" data-hf-motion-blur='{"samplesPerFrame": 12}'></div>
+      </div>
+      <script>
+        (function () {
+          const B = 60 / 128;
+          const TEXT = "Marketing engineering";
+          const word = document.getElementById("b8-word");
+          word.innerHTML = TEXT.split("").map((c, i) => '<span class="b8-l" id="b8-l' + i + '">' + (c === " " ? "&nbsp;" : c) + "</span>").join("");
+
+          function build() {
+            const FS = 136;
+            const mc = document.createElement("canvas").getContext("2d");
+            mc.font = "640 " + FS + "px 'Source Serif'";
+            const m = mc.measureText("x");
+            const asc = m.fontBoundingBoxAscent, desc = m.fontBoundingBoxDescent;
+            const LH = 190;
+            const baseline = (LH - (asc + desc)) / 2 + asc;
+            const xh = m.actualBoundingBoxAscent;
+            const ww = word.offsetWidth;
+            const DOT = 32, GAP = 0.05 * FS;
+            const total = ww + GAP + DOT;
+            const left = Math.round((1920 - total) / 2);
+            const BASE_Y = 548; // baseline of the wordmark on screen
+            const wordTop = BASE_Y - baseline;
+            gsap.set(word, { left: left, top: wordTop });
+            // period centre sits on the baseline, a dot's radius above it
+            const px = left + ww + GAP + DOT / 2;
+            const py = BASE_Y - DOT / 2 - 1;
+            gsap.set("#b8-capsclip", { top: BASE_Y + 74 });
+            gsap.set("#b8-meta", { top: BASE_Y + 150 });
+
+            const tl = gsap.timeline({ paused: true });
+            const n = TEXT.length;
+            for (let i = 0; i < n; i++) {
+              tl.fromTo("#b8-l" + i, { yPercent: 100 }, { yPercent: 0, duration: 0.36, ease: "expo.out" }, 0.07 + i * 0.016);
+            }
+            // the red dot arcs from the centre and lands as the period
+            const dx = px - 960, dy = py - 540;
+            const peak = -230;
+            const dotEl = document.getElementById("b8-dotwrap");
+            const flight = { p: 0 };
+            const flyTo = (p) => {
+              const x = dx * (1 - Math.pow(1 - p, 1.7));
+              const y = dy * Math.pow(p, 1.8) + peak * 4 * p * (1 - p);
+              gsap.set(dotEl, { x: x, y: y });
+            };
+            gsap.set(dotEl, { x: 0, y: 0 });
+            tl.fromTo(flight, { p: 0 }, { p: 1, duration: 0.4, ease: "power1.in", onUpdate: () => flyTo(flight.p) }, 0.1);
+            tl.fromTo("#b8-dotwrap", { scaleX: 1, scaleY: 1 }, { scaleX: 1.28, scaleY: 0.74, duration: 0.05, ease: "power2.out", immediateRender: false }, 0.5);
+            tl.to("#b8-dotwrap", { scaleX: 1, scaleY: 1, duration: 0.3, ease: "back.out(2.6)" }, 0.55);
+            // tagline wipes up, metadata types
+            tl.fromTo("#b8-caps", { yPercent: 160 }, { yPercent: 0, duration: 0.42, ease: "expo.out" }, 0.62);
+            tl.fromTo("#b8-meta", { opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "steps(20)" }, 0.86);
+            // loop seam: clear the card, the dot returns to frame centre, black closes in
+            tl.to("#b8-word", { opacity: 0, duration: 0.08, ease: "power2.in" }, 1.5);
+            tl.to("#b8-capsclip", { opacity: 0, duration: 0.07, ease: "power2.in" }, 1.5);
+            tl.to("#b8-meta", { opacity: 0, duration: 0.06, ease: "power2.in" }, 1.5);
+            tl.to("#b8-dotwrap", { x: 0, y: 0, duration: 0.2, ease: "expo.inOut" }, 1.52);
+            tl.fromTo("#b8-iris", { scale: 0 }, { scale: 1, duration: 0.17, ease: "expo.in" }, 1.57);
+            tl.to({}, { duration: 0.01 }, 1.865);
+            window.__timelines["b8-mark"] = tl;
+          }
+          Promise.all([document.fonts.load("640 136px 'Source Serif'"), document.fonts.load("700 27px Barlow"), document.fonts.load("400 17px 'JB Mono'")]).then(build);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,276 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+          font-weight: 700;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        #b5-funnel-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #2e3df2;
+        }
+        #b5-cv {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+      <div id="b5-funnel-root" data-composition-id="b5-funnel" data-width="1920" data-height="1080">
+        <canvas id="b5-cv" width="1920" height="1080"></canvas>
+      </div>
+      <script>
+        (function () {
+          const W = 1920, H = 1080;
+          const B = 60 / 128, DUR = 1.875;
+          const COB = "#2E3DF2";
+          const cv = document.getElementById("b5-cv");
+          const ctx = cv.getContext("2d");
+          const acc = document.createElement("canvas");
+          acc.width = W; acc.height = H;
+          const actx = acc.getContext("2d");
+
+          const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+          const lerp = (a, b, u) => a + (b - a) * u;
+          const prog = (t, a, d) => clamp((t - a) / d);
+          const inOutCubic = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+          const outCubic = (u) => 1 - Math.pow(1 - u, 3);
+          const inExpo = (u) => (u <= 0 ? 0 : Math.pow(2, 10 * (u - 1)));
+          const outExpo = (u) => (u >= 1 ? 1 : 1 - Math.pow(2, -10 * u));
+          let seed = 90210;
+          const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+
+          // ---------- point sets (world units) ----------
+          const NP = 1800, NR = 36;
+          // A: tilted contact plane (continues bar 4)
+          const plane = [];
+          { const cols = 60, rows = 30; for (let i = 0; i < NP; i++) { const c = i % cols, r = Math.floor(i / cols); plane.push([(c - (cols - 1) / 2) * 0.13, 0, (r - (rows - 1) / 2) * 0.13]); } }
+          // B: sphere (fibonacci)
+          const sphere = [];
+          for (let i = 0; i < NP; i++) {
+            const y = 1 - (i / (NP - 1)) * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963;
+            sphere.push([Math.cos(th) * r * 2.0, y * 2.0, Math.sin(th) * r * 2.0]);
+          }
+          // C: funnel wireframe (4 rings + 8 ribs); points spread along the wire by length
+          const TIERS = [[1.55, 2.5], [0.55, 1.75], [-0.35, 1.05], [-1.2, 0.42]];
+          const segs = [];
+          const RING_SEG = 48;
+          for (const [y, r] of TIERS)
+            for (let k = 0; k < RING_SEG; k++) {
+              const a0 = (k / RING_SEG) * Math.PI * 2, a1 = ((k + 1) / RING_SEG) * Math.PI * 2;
+              segs.push([[Math.cos(a0) * r, y, Math.sin(a0) * r], [Math.cos(a1) * r, y, Math.sin(a1) * r]]);
+            }
+          for (let j = 0; j < 8; j++) {
+            const a = (j / 8) * Math.PI * 2;
+            for (let k = 0; k < 3; k++) {
+              const [y0, r0] = TIERS[k], [y1, r1] = TIERS[k + 1];
+              segs.push([[Math.cos(a) * r0, y0, Math.sin(a) * r0], [Math.cos(a) * r1, y1, Math.sin(a) * r1]]);
+            }
+          }
+          const segLen = segs.map(([a, b]) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]));
+          const totLen = segLen.reduce((s, v) => s + v, 0);
+          const funnel = [];
+          {
+            let si = 0, acc0 = 0;
+            for (let i = 0; i < NP; i++) {
+              const L = ((i + 0.5) / NP) * totLen;
+              while (acc0 + segLen[si] < L && si < segs.length - 1) { acc0 += segLen[si]; si++; }
+              const u = (L - acc0) / segLen[si];
+              const [a, b] = segs[si];
+              funnel.push([lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)]);
+            }
+          }
+          // shuffle the funnel assignment so the cloud collapses from everywhere
+          const order = Array.from({ length: NP }, (_, i) => i);
+          for (let i = NP - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+          const delay = Array.from({ length: NP }, () => rnd() * 0.16);
+          // red leads that drop through the funnel
+          const reds = [];
+          for (let i = 0; i < NR; i++) reds.push({ a: rnd() * Math.PI * 2, d: rnd() * 0.3, keep: i < 7 });
+
+          let THREE = null, renderer, scene, camera, pts, ptsGeo, redPts, redGeo, lines, lineGeo, labels;
+          const T_SPH = 0.04, T_FUN = 2 * B - 0.05;
+
+          function pointAt(i, t) {
+            const p = plane[i], s = sphere[i], f = funnel[order[i]];
+            const a = outCubic(prog(t, T_SPH + delay[i] * 0.4, 0.42));
+            const b = inOutCubic(prog(t, T_FUN + delay[i], 0.4));
+            // breathing sphere
+            const br = 1 + 0.02 * Math.sin(t * 6);
+            let x = lerp(p[0], s[0] * br, a), y = lerp(p[1], s[1] * br, a), z = lerp(p[2], s[2] * br, a);
+            x = lerp(x, f[0], b); y = lerp(y, f[1], b); z = lerp(z, f[2], b);
+            return [x, y, z];
+          }
+
+          function setup(T) {
+            THREE = T;
+            const gl = document.createElement("canvas");
+            gl.width = W; gl.height = H;
+            renderer = new THREE.WebGLRenderer({ canvas: gl, antialias: true, alpha: false, preserveDrawingBuffer: true });
+            renderer.setPixelRatio(1);
+            renderer.setSize(W, H, false);
+            renderer.setClearColor(new THREE.Color(COB), 1);
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(36, W / H, 0.1, 100);
+            const mat = (color, size) =>
+              new THREE.ShaderMaterial({
+                uniforms: { uColor: { value: new THREE.Vector3(parseInt(color.slice(1, 3), 16) / 255, parseInt(color.slice(3, 5), 16) / 255, parseInt(color.slice(5, 7), 16) / 255) }, uSize: { value: size } },
+                vertexShader:
+                  "uniform float uSize; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); gl_PointSize = uSize * (6.0 / -mv.z); gl_Position = projectionMatrix * mv; }",
+                fragmentShader:
+                  "uniform vec3 uColor; void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c); if (d > 0.5) discard; float a = smoothstep(0.5, 0.38, d); gl_FragColor = vec4(uColor, a); }",
+                transparent: true,
+                depthWrite: false,
+              });
+            ptsGeo = new THREE.BufferGeometry();
+            ptsGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(NP * 3), 3));
+            pts = new THREE.Points(ptsGeo, mat("#F4F1EA", 9.0));
+            pts.frustumCulled = false;
+            scene.add(pts);
+            redGeo = new THREE.BufferGeometry();
+            redGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(NR * 3), 3));
+            redPts = new THREE.Points(redGeo, mat("#E9432F", 24.0));
+            redPts.frustumCulled = false;
+            redPts.renderOrder = 2;
+            scene.add(redPts);
+            const lp = new Float32Array(segs.length * 6);
+            segs.forEach(([a, b], i) => { lp.set(a, i * 6); lp.set(b, i * 6 + 3); });
+            lineGeo = new THREE.BufferGeometry();
+            lineGeo.setAttribute("position", new THREE.BufferAttribute(lp, 3));
+            lines = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0xf4f1ea, transparent: true, opacity: 0 }));
+            scene.add(lines);
+          }
+
+          function cameraAt(t) {
+            const yaw = -0.5 + t * 0.95 + 1.4 * inExpo(prog(t, 1.62, 0.25));
+            const pitch = lerp(0.95, 0.32, inOutCubic(prog(t, 0.0, 0.5)));
+            let dist = lerp(7.2, 8.2, outCubic(prog(t, 0.6, 0.6)));
+            dist = lerp(dist, 1.2, inExpo(prog(t, 1.64, 0.235)));
+            const lookY = lerp(0, 0.15, prog(t, 0.9, 0.4));
+            camera.position.set(Math.sin(yaw) * Math.cos(pitch) * dist, Math.sin(pitch) * dist + lookY, Math.cos(yaw) * Math.cos(pitch) * dist);
+            camera.lookAt(0, lookY, 0);
+            camera.updateMatrixWorld();
+          }
+
+          function drawGL(t) {
+            const pa = ptsGeo.attributes.position.array;
+            for (let i = 0; i < NP; i++) { const q = pointAt(i, t); pa[i * 3] = q[0]; pa[i * 3 + 1] = q[1]; pa[i * 3 + 2] = q[2]; }
+            ptsGeo.attributes.position.needsUpdate = true;
+            const ra = redGeo.attributes.position.array;
+            for (let i = 0; i < NR; i++) {
+              const r = reds[i];
+              // leads drop in on the top ring, spiral down; most leak out between tiers, a few reach CLOSED
+              const appear = prog(t, 0.98 + r.d * 0.5, 0.08);
+              const fall = inOutCubic(prog(t, 1.02 + r.d * 0.5, 0.5));
+              const yEnd = r.keep ? -1.38 : lerp(0.9, -0.6, (i % 7) / 6);
+              const y = lerp(1.62, yEnd, fall);
+              // radius follows the funnel wall profile (just inside it)
+              let wall = 2.5;
+              for (let k = 0; k < 3; k++) {
+                const [y0, r0] = TIERS[k], [y1, r1] = TIERS[k + 1];
+                if (y <= y0 && y >= y1) wall = lerp(r0, r1, (y0 - y) / (y0 - y1));
+              }
+              if (y < TIERS[3][0]) wall = TIERS[3][1];
+              const rad = wall * (r.keep ? lerp(0.85, 0.35, fall) : 0.85);
+              const ang = r.a + fall * 2.6;
+              const out = r.keep ? 0 : outCubic(prog(t, 1.02 + r.d * 0.5 + 0.5, 0.18));
+              const rr2 = rad + out * 2.2;
+              ra[i * 3] = Math.cos(ang) * rr2;
+              ra[i * 3 + 1] = appear > 0 && out < 1 ? y - out * 0.4 : 99;
+              ra[i * 3 + 2] = Math.sin(ang) * rr2;
+            }
+            redGeo.attributes.position.needsUpdate = true;
+            lines.material.opacity = 0.55 * prog(t, T_FUN + 0.3, 0.2);
+            cameraAt(t);
+            renderer.render(scene, camera);
+          }
+
+          const LABELS = [["LEADS", "4,812"], ["QUALIFIED", "640"], ["MEETINGS", "92"], ["CLOSED", "18"]];
+          function drawLabels(g, t) {
+            const a = prog(t, T_FUN + 0.34, 0.1) * (1 - prog(t, 1.64, 0.06));
+            if (a <= 0) return;
+            g.globalAlpha = a;
+            if ("letterSpacing" in g) g.letterSpacing = "2px";
+            for (let k = 0; k < 4; k++) {
+              const [y, r] = TIERS[k];
+              // label anchors on the ring at the screen-right extreme
+              let best = null;
+              for (let j = 0; j < 32; j++) {
+                const an = (j / 32) * Math.PI * 2;
+                const v = new THREE.Vector3(Math.cos(an) * r, y, Math.sin(an) * r).project(camera);
+                const sx = (v.x * 0.5 + 0.5) * W, sy = (-v.y * 0.5 + 0.5) * H;
+                if (!best || sx > best[0]) best = [sx, sy];
+              }
+              const lp = prog(t, T_FUN + 0.34 + k * 0.035, 0.12);
+              const x0 = best[0] + 14, y0 = best[1];
+              const x1 = 1380 + k * 0;
+              g.strokeStyle = "rgba(255,255,255,0.75)"; g.lineWidth = 1.5;
+              g.beginPath(); g.moveTo(x0, y0); g.lineTo(lerp(x0, x1, outCubic(lp)), y0); g.stroke();
+              g.fillStyle = "#ffffff";
+              g.beginPath(); g.arc(x0, y0, 4, 0, Math.PI * 2); g.fill();
+              if (lp > 0.3) {
+                g.textBaseline = "middle"; g.textAlign = "left";
+                g.font = "700 22px 'JB Mono'";
+                const txt = LABELS[k][0];
+                g.fillText(txt.slice(0, Math.ceil(txt.length * prog(lp, 0.3, 0.7))), x1 + 16, y0 - 1);
+                g.font = "400 22px 'JB Mono'";
+                g.fillStyle = k === 3 ? "#ffffff" : "rgba(255,255,255,0.72)";
+                g.textAlign = "right";
+                g.fillText(LABELS[k][1], 1700, y0 - 1);
+              }
+            }
+            if ("letterSpacing" in g) g.letterSpacing = "0px";
+            g.globalAlpha = 1;
+          }
+
+          const N = 8, SHUT = 1 / 60;
+          function render(t) {
+            if (!THREE) { ctx.fillStyle = COB; ctx.fillRect(0, 0, W, H); return; }
+            actx.globalCompositeOperation = "source-over";
+            actx.clearRect(0, 0, W, H);
+            for (let i = 0; i < N; i++) {
+              const ts = clamp(t + (i / (N - 1) - 0.5) * SHUT, 0, DUR - 0.0001);
+              drawGL(ts);
+              actx.globalCompositeOperation = "lighter";
+              actx.globalAlpha = 1 / N;
+              actx.drawImage(renderer.domElement, 0, 0);
+            }
+            actx.globalAlpha = 1;
+            actx.globalCompositeOperation = "source-over";
+            ctx.drawImage(acc, 0, 0);
+            cameraAt(t);
+            drawLabels(ctx, t);
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          const clock = { v: 0 };
+          tl.to(clock, { v: 1, duration: DUR, ease: "none", onUpdate: () => render(tl.time()) }, 0);
+          window.__timelines["b5-funnel"] = tl;
+          window.__hf = window.__hf || {};
+          window.__hf.buildReady = window.__hf.buildReady || {};
+          window.__hf.buildReady["b5-funnel-three"] = Promise.all([
+            import("https://cdn.jsdelivr.net/npm/three@0.181.2/+esm"),
+            document.fonts.load("700 22px 'JB Mono'"),
+            document.fonts.load("400 22px 'JB Mono'"),
+          ]).then(([T]) => {
+            setup(T);
+            render(tl.time());
+          });
+        })();
+      </script>
+    </template>
+  </body>
+</html>

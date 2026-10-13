@@ -1,0 +1,340 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Inter Tight";
+          src: url("../assets/fonts/InterTight-Var.woff2") format("woff2");
+          font-weight: 100 900;
+        }
+        @font-face {
+          font-family: "Instrument Serif";
+          src: url("../assets/fonts/InstrumentSerif-Italic.woff2") format("woff2");
+          font-style: italic;
+          font-weight: 400;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+          font-weight: 700;
+        }
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f2f0eb;
+          color: #121212;
+          font-family: "Inter Tight", sans-serif;
+        }
+        #s1-ret {
+          position: absolute;
+          inset: 0;
+        }
+        .s1-kicker {
+          position: absolute;
+          top: 318px;
+          font-family: "JB Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          line-height: 1;
+          white-space: nowrap;
+        }
+        #s1-k-l { left: 84px; font-weight: 700; }
+        #s1-k-r { right: 84px; color: #6e6a62; }
+        #s1-rule {
+          position: absolute;
+          left: 84px;
+          right: 84px;
+          top: 348px;
+          height: 2px;
+          background: #121212;
+        }
+        #s1-mask {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 366px;
+          height: 216px;
+          overflow: hidden;
+        }
+        #s1-word {
+          position: absolute;
+          left: 74px;
+          top: 6px;
+          font-size: 206px;
+          font-weight: 800;
+          letter-spacing: -0.035em;
+          line-height: 1;
+          white-space: nowrap;
+          will-change: transform;
+        }
+        #s1-strike {
+          position: absolute;
+          left: 64px;
+          width: 952px;
+          top: 466px;
+          height: 18px;
+          background: #f04a2a;
+          transform-origin: left center;
+          will-change: transform;
+        }
+        #s1-price {
+          position: absolute;
+          left: 84px;
+          top: 604px;
+          height: 132px;
+          display: flex;
+          align-items: flex-start;
+          font-size: 132px;
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          line-height: 1;
+          white-space: nowrap;
+          font-variant-numeric: tabular-nums;
+        }
+        .s1-col {
+          display: block;
+          position: relative;
+          height: 132px;
+          width: 0.64em;
+          overflow: hidden;
+        }
+        .s1-strip {
+          display: block;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          will-change: transform;
+        }
+        .s1-strip b {
+          display: block;
+          height: 132px;
+          line-height: 132px;
+          font-weight: 700;
+          text-align: center;
+        }
+        .s1-static {
+          display: block;
+          height: 132px;
+          line-height: 132px;
+        }
+        #s1-per {
+          font-family: "Instrument Serif", serif;
+          font-style: italic;
+          font-weight: 400;
+          font-size: 104px;
+          letter-spacing: 0;
+          color: #6e6a62;
+          margin-left: 18px;
+          line-height: 150px;
+        }
+        #s1-pstrike {
+          position: absolute;
+          left: 76px;
+          width: 560px;
+          top: 666px;
+          height: 9px;
+          background: #f04a2a;
+          transform-origin: left center;
+        }
+        #s1-note {
+          position: absolute;
+          left: 84px;
+          top: 772px;
+          font-family: "JB Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #6e6a62;
+          white-space: nowrap;
+        }
+
+        /* ---- RENT. field ---- */
+        #s1-rent {
+          position: absolute;
+          inset: 0;
+          background: #f04a2a;
+          opacity: 0;
+        }
+        #s1-rent-word {
+          position: absolute;
+          left: 64px;
+          top: 300px;
+          font-size: 330px;
+          font-weight: 800;
+          letter-spacing: -0.045em;
+          line-height: 1;
+          color: #ffffff;
+          white-space: nowrap;
+          transform-origin: 30% 60%;
+          will-change: transform;
+        }
+        #s1-rent-sub {
+          position: absolute;
+          left: 84px;
+          top: 676px;
+          font-family: "Instrument Serif", serif;
+          font-style: italic;
+          font-size: 64px;
+          line-height: 1;
+          color: #ffffff;
+          white-space: nowrap;
+        }
+        #s1-rent-tag {
+          position: absolute;
+          left: 84px;
+          top: 270px;
+          font-family: "JB Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #121212;
+          white-space: nowrap;
+        }
+      </style>
+
+      <div id="root" data-composition-id="s1-retainer" data-width="1080" data-height="1080">
+        <svg width="0" height="0" style="position: absolute">
+          <defs>
+            <filter id="s1-vb0" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s1-vbg0" stdDeviation="0 0" /></filter>
+            <filter id="s1-vb1" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s1-vbg1" stdDeviation="0 0" /></filter>
+            <filter id="s1-vb2" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s1-vbg2" stdDeviation="0 0" /></filter>
+            <filter id="s1-vb3" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s1-vbg3" stdDeviation="0 0" /></filter>
+          </defs>
+        </svg>
+
+        <div id="s1-ret">
+          <div class="s1-kicker" id="s1-k-l">N° 01 · LINE ITEM</div>
+          <div class="s1-kicker" id="s1-k-r">BILLED MONTHLY</div>
+          <div id="s1-rule"></div>
+          <div id="s1-mask"><div id="s1-word" data-hf-motion-blur>RETAINER</div></div>
+          <div id="s1-strike"></div>
+          <div id="s1-price">
+            <span class="s1-static">$</span>
+            <span class="s1-col" id="s1-c0"><span class="s1-strip" data-layout-allow-overflow id="s1-s0"></span></span>
+            <span class="s1-static">,</span>
+            <span class="s1-col" id="s1-c1"><span class="s1-strip" data-layout-allow-overflow id="s1-s1"></span></span>
+            <span class="s1-col" id="s1-c2"><span class="s1-strip" data-layout-allow-overflow id="s1-s2"></span></span>
+            <span class="s1-col" id="s1-c3"><span class="s1-strip" data-layout-allow-overflow id="s1-s3"></span></span>
+            <span class="s1-static" id="s1-per">/mo</span>
+          </div>
+          <div id="s1-pstrike"></div>
+          <div id="s1-note">TYPICAL US AGENCY RETAINER · ILLUSTRATIVE</div>
+        </div>
+
+        <div id="s1-rent">
+          <div id="s1-rent-tag">WHAT YOU ARE ACTUALLY PAYING</div>
+          <div id="s1-rent-word" data-hf-motion-blur>RENT.</div>
+          <div id="s1-rent-sub">Pay every month. Own nothing.</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // ---------- shared maths (identical copy lives in s7-end.html) ----------
+          const spring = (z, k) => {
+            if (z >= 0.999) return (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-k * p) * (1 + k * p));
+            const wd = k * Math.sqrt(1 - z * z);
+            return (p) => {
+              if (p <= 0) return 0;
+              if (p >= 1) return 1;
+              return 1 - Math.exp(-z * k * p) * (Math.cos(wd * p) + ((z * k) / wd) * Math.sin(wd * p));
+            };
+          };
+          // RETAINER rise: window tp in [-0.30, +0.25] around the loop seam
+          const RISE_A = -0.16, RISE_D = 0.56, RISE_Y = 230;
+          const riseEase = spring(0.8, 10);
+          const SPLIT = (0 - RISE_A) / RISE_D; // progress at the loop seam
+          const S_SPLIT = riseEase(SPLIT);
+          // price roll: columns 6,0,0,0 with extra revolutions, all start before the seam
+          const LINE = 132;
+          const TARGET = [6, 0, 0, 0];
+          const REVS = [1, 2, 3, 4];
+          const ROLL_A = -0.25;
+          const ROLL_D = [0.86, 0.94, 1.02, 1.1];
+          const rollEase = spring(0.82, 9);
+          const colPos = (i, tp) => (TARGET[i] + 10 * REVS[i]) * rollEase((tp - ROLL_A) / ROLL_D[i]);
+
+          const strips = [0, 1, 2, 3].map((i) => document.getElementById("s1-s" + i));
+          const blurs = [0, 1, 2, 3].map((i) => document.getElementById("s1-vbg" + i));
+          strips.forEach((s, i) => {
+            let h = "";
+            const n = TARGET[i] + 10 * REVS[i];
+            for (let d = 0; d <= n + 2; d++) h += "<b>" + (d % 10) + "</b>";
+            s.innerHTML = h;
+            document.getElementById("s1-c" + i).style.filter = "url(#s1-vb" + i + ")";
+          });
+          function paintRoll(tp) {
+            for (let i = 0; i < 4; i++) {
+              const p = colPos(i, tp);
+              const v = (colPos(i, tp + 1 / 120) - colPos(i, tp - 1 / 120)) * 60; // digits per second
+              strips[i].style.transform = "translateY(" + (-p * LINE).toFixed(2) + "px)";
+              const b = Math.min(16, Math.abs(v) * LINE * (1 / 60) * 0.45);
+              blurs[i].setAttribute("stdDeviation", "0 " + (b < 0.15 ? 0 : b.toFixed(2)));
+            }
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          const B = (k) => 0.02 + k * (1.951333 / 4); // beat k, global = local here
+
+          // RETAINER: the second half of the rise (first half plays at the end of s7-end)
+          tl.fromTo(
+            "#s1-word",
+            { y: RISE_Y * (1 - S_SPLIT) },
+            {
+              y: 0,
+              duration: RISE_D * (1 - SPLIT),
+              ease: (p) => (riseEase(SPLIT + p * (1 - SPLIT)) - S_SPLIT) / (1 - S_SPLIT),
+            },
+            0,
+          );
+          // the roll, as a pure function of time
+          const drv = { v: 0 };
+          tl.to(drv, { v: 1, duration: 1.4, ease: "none", onUpdate: () => paintRoll(tl.time()) }, 0);
+          paintRoll(0);
+
+          // beat 2: RETAINER leans in a touch (anticipation for the strike)
+          tl.fromTo("#s1-word", { scale: 1 }, { scale: 0.985, duration: 0.45, ease: "sine.inOut", transformOrigin: "0% 50%" }, B(2));
+
+          // beat 3: the strike (thud), then the price strike on the next 8th
+          tl.fromTo("#s1-strike", { scaleX: 0 }, { scaleX: 1, duration: 0.2, ease: "expo.out" }, B(3) - 0.03);
+          tl.fromTo("#s1-pstrike", { scaleX: 0 }, { scaleX: 1, duration: 0.16, ease: "expo.out" }, B(3.5));
+          tl.to(["#s1-price", "#s1-note"], { opacity: 0.45, duration: 0.18, ease: "power2.out" }, B(3.5));
+
+          // downbeat of bar 2: hard cut to RENT.
+          tl.set("#s1-rent", { opacity: 1 }, B(4));
+          tl.set("#s1-ret", { opacity: 0 }, B(4));
+          tl.fromTo(
+            "#s1-rent-word",
+            { scale: 1.16, x: -30 },
+            { scale: 1, x: 0, duration: 0.34, ease: spring(0.78, 11) },
+            B(4),
+          );
+          // slow settle after the punch (sequential, no overlap with the spring above)
+          tl.fromTo("#s1-rent-word", { scale: 1 }, { scale: 0.972, duration: 0.62, ease: "sine.inOut", immediateRender: false }, B(4) + 0.34);
+          tl.fromTo("#s1-rent-tag", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.2, ease: "power3.out" }, B(4) + 0.06);
+          // beat 5: sub-line lifts in through blur
+          tl.fromTo(
+            "#s1-rent-sub",
+            { opacity: 0, y: 22, filter: "blur(9px)" },
+            { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.28, ease: "power3.out" },
+            B(5),
+          );
+
+          window.__timelines["s1-retainer"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

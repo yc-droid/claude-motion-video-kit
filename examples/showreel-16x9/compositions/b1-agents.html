@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Barlow";
+          src: url("../assets/fonts/Barlow-600.ttf") format("truetype");
+          font-weight: 600;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        #b1-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #111113;
+        }
+        #b1-cv {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+      <div id="b1-root" data-composition-id="b1-agents" data-width="1920" data-height="1080">
+        <canvas id="b1-cv" width="1920" height="1080"></canvas>
+      </div>
+      <script>
+        (function () {
+          const W = 1920, H = 1080, CX = 960, CY = 540;
+          const B = 60 / 128;
+          const DUR = 1.875;
+          const RED = "#E9432F", INK = "#111113", PAPER = "#EEEAE3";
+          const cv = document.getElementById("b1-cv");
+          const ctx = cv.getContext("2d");
+          const off = document.createElement("canvas");
+          off.width = W; off.height = H;
+          const octx = off.getContext("2d");
+
+          const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+          const lerp = (a, b, u) => a + (b - a) * u;
+          const prog = (t, a, d) => clamp((t - a) / d);
+          const outExpo = (u) => (u >= 1 ? 1 : 1 - Math.pow(2, -10 * u));
+          const inExpo = (u) => (u <= 0 ? 0 : Math.pow(2, 10 * (u - 1)));
+          const inCubic = (u) => u * u * u;
+          const outCubic = (u) => 1 - Math.pow(1 - u, 3);
+          const inOutCubic = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+          // damped spring, zeta 0.78 (about 2% overshoot), tau = seconds since trigger
+          function spring(tau, f = 3.6, z = 0.78) {
+            if (tau <= 0) return 0;
+            const w = 2 * Math.PI * f, wd = w * Math.sqrt(1 - z * z);
+            return 1 - Math.exp(-z * w * tau) * (Math.cos(wd * tau) + ((z * w) / wd) * Math.sin(wd * tau));
+          }
+
+          const LABELS = ["COPY", "ADS", "EMAIL", "CRM", "SEO", "DATA"];
+          // node k sits at angle -90 + 60k. Visible from stage: 0,3 at beat 2; 1,4 at beat 3; 2,5 at beat 4
+          const BORN = [B, B * 1.5, B * 2, B, B * 1.5, B * 2];
+          const RAD = [0, 128, 176, 226]; // radius per stage
+
+          function stageRadius(t) {
+            // radius grows on each beat with a spring
+            let r = 0;
+            r += (RAD[1] - RAD[0]) * spring(t - B);
+            r += (RAD[2] - RAD[1]) * spring(t - 1.5 * B);
+            r += (RAD[3] - RAD[2]) * spring(t - 2 * B);
+            return r;
+          }
+
+          function draw(g, t) {
+            g.clearRect(0, 0, W, H);
+            const suck = inExpo(prog(t, 1.62, 0.2)); // nodes return to the human
+            const iris = inExpo(prog(t, 1.70, 0.175));
+            const ringRot = (-30 * Math.PI) / 180 * inOutCubic(prog(t, 1.0, 0.75));
+            const rBase = stageRadius(t) * (1 - suck);
+
+            // crosshair
+            const chA = 0.55 * prog(t, 0.08, 0.2) * (1 - prog(t, 1.62, 0.1));
+            if (chA > 0) {
+              g.strokeStyle = "rgba(238,234,227," + (0.35 * chA).toFixed(3) + ")";
+              g.lineWidth = 1.5;
+              g.beginPath();
+              g.moveTo(CX - 46, CY); g.lineTo(CX - 26, CY);
+              g.moveTo(CX + 26, CY); g.lineTo(CX + 46, CY);
+              g.moveTo(CX, CY - 46); g.lineTo(CX, CY - 26);
+              g.moveTo(CX, CY + 26); g.lineTo(CX, CY + 46);
+              g.stroke();
+            }
+
+            // ring hairline, sweeps on with the last stage
+            const ringA = prog(t, 2 * B, 0.3);
+            if (ringA > 0 && suck < 1) {
+              g.strokeStyle = "rgba(238,234,227," + (0.22 * (1 - suck)).toFixed(3) + ")";
+              g.lineWidth = 1.5;
+              g.beginPath();
+              const a0 = -Math.PI / 2 + ringRot;
+              g.arc(CX, CY, Math.max(1, rBase), a0, a0 + Math.PI * 2 * outCubic(ringA));
+              g.stroke();
+              // tick marks every 15 degrees, outside the ring
+              g.strokeStyle = "rgba(238,234,227," + (0.18 * (1 - suck) * ringA).toFixed(3) + ")";
+              g.beginPath();
+              for (let i = 0; i < 24; i++) {
+                if (i % 4 === 0) continue;
+                const a = ringRot + (i * Math.PI) / 12;
+                const r1 = rBase + 12, r2 = rBase + 20;
+                g.moveTo(CX + Math.cos(a) * r1, CY + Math.sin(a) * r1);
+                g.lineTo(CX + Math.cos(a) * r2, CY + Math.sin(a) * r2);
+              }
+              g.stroke();
+            }
+
+            // spokes + nodes + labels
+            for (let k = 0; k < 6; k++) {
+              const born = BORN[k];
+              if (t < born) continue;
+              const s = spring(t - born, 4.2, 0.8);
+              const a = -Math.PI / 2 + (k * Math.PI) / 3 + ringRot;
+              const r = rBase * clamp(s, 0, 1.1);
+              const x = CX + Math.cos(a) * r, y = CY + Math.sin(a) * r;
+              if (suck < 0.98) {
+                g.strokeStyle = "rgba(238,234,227," + (0.2 * (1 - suck)).toFixed(3) + ")";
+                g.lineWidth = 1;
+                g.beginPath();
+                g.moveTo(CX + Math.cos(a) * 24, CY + Math.sin(a) * 24);
+                g.lineTo(x - Math.cos(a) * 16, y - Math.sin(a) * 16);
+                g.stroke();
+              }
+              const nr = 12 * clamp(s * 1.4, 0, 1) * (1 - suck * 0.6);
+              g.fillStyle = PAPER;
+              g.beginPath();
+              g.arc(x, y, Math.max(0, nr), 0, Math.PI * 2);
+              g.fill();
+              // label types on after the ring settles
+              const lp = prog(t, 2 * B + 0.08 + k * 0.03, 0.16) * (1 - prog(t, 1.6, 0.06));
+              if (lp > 0) {
+                const txt = LABELS[k];
+                const n = Math.ceil(txt.length * lp);
+                const lr = rBase + 52;
+                const lx = CX + Math.cos(a) * lr, ly = CY + Math.sin(a) * lr;
+                g.font = "600 17px Barlow";
+                g.textBaseline = "middle";
+                g.textAlign = Math.abs(Math.cos(a)) < 0.2 ? "center" : Math.cos(a) > 0 ? "left" : "right";
+                if ("letterSpacing" in g) g.letterSpacing = "4px";
+                g.fillStyle = "rgba(238,234,227,0.86)";
+                g.fillText(txt.slice(0, n), lx, ly);
+                g.font = "400 12px 'JB Mono'";
+                g.fillStyle = "rgba(238,234,227,0.42)";
+                const idx = "0" + (k + 1);
+                const iy = ly - 22;
+                g.fillText(idx.slice(0, Math.ceil(2 * lp)), lx, iy);
+                if ("letterSpacing" in g) g.letterSpacing = "0px";
+              }
+            }
+
+            // caption under the ring
+            const capA = prog(t, 2 * B + 0.2, 0.18) * (1 - prog(t, 1.6, 0.06));
+            if (capA > 0) {
+              g.font = "600 17px Barlow";
+              g.textAlign = "center";
+              g.textBaseline = "middle";
+              if ("letterSpacing" in g) g.letterSpacing = "4px";
+              g.fillStyle = "rgba(238,234,227," + (0.5 * capA).toFixed(3) + ")";
+              const full = "1 HUMAN  ·  6 AGENTS";
+              g.fillText(full.slice(0, Math.ceil(full.length * capA)), CX, CY + 360);
+              if ("letterSpacing" in g) g.letterSpacing = "0px";
+            }
+
+            // the human: red dot, pulses on the two kicks, then becomes the iris
+            let pr = 0;
+            pr += 0.32 * Math.exp(-Math.max(0, t - 0.0) / 0.07) * (t >= 0 ? 1 : 0);
+            pr += 0.32 * Math.exp(-Math.max(0, t - B) / 0.07) * (t >= B ? 1 : 0);
+            pr += 0.2 * Math.exp(-Math.max(0, t - 1.5 * B) / 0.07) * (t >= 1.5 * B ? 1 : 0);
+            pr += 0.24 * Math.exp(-Math.max(0, t - 2 * B) / 0.08) * (t >= 2 * B ? 1 : 0);
+            const dr = 15 * (1 + pr) + iris * 1150;
+            g.fillStyle = RED;
+            g.beginPath();
+            g.arc(CX, CY, dr, 0, Math.PI * 2);
+            g.fill();
+          }
+
+          // sub-frame shutter: average N samples over 1/45 s (additive on a clear layer)
+          const N = 8, SHUT = 1 / 45;
+          function render(t) {
+            ctx.fillStyle = INK;
+            ctx.fillRect(0, 0, W, H);
+            const moving = t > B - 0.02 && t < 1.875;
+            if (!moving) {
+              draw(ctx, t);
+              return;
+            }
+            const acc = octx;
+            acc.globalCompositeOperation = "source-over";
+            acc.clearRect(0, 0, W, H);
+            const tmp = draw._tmp || (draw._tmp = (() => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; })());
+            const tg = tmp.getContext("2d");
+            for (let i = 0; i < N; i++) {
+              const ts = Math.min(DUR - 0.0001, t + (i / (N - 1) - 0.5) * SHUT);
+              draw(tg, ts);
+              acc.globalCompositeOperation = "lighter";
+              acc.globalAlpha = 1 / N;
+              acc.drawImage(tmp, 0, 0);
+            }
+            acc.globalAlpha = 1;
+            acc.globalCompositeOperation = "source-over";
+            ctx.drawImage(off, 0, 0);
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          const clock = { v: 0 };
+          tl.to(clock, { v: 1, duration: DUR, ease: "none", onUpdate: () => render(tl.time()) }, 0);
+          Promise.all([document.fonts.load("600 17px Barlow"), document.fonts.load("400 12px 'JB Mono'")]).then(() => {
+            render(0);
+            window.__timelines["b1-agents"] = tl;
+          });
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,200 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+          font-weight: 700;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        #b4-grid-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #eeeae3;
+        }
+        #b4-cv {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+      <div id="b4-grid-root" data-composition-id="b4-grid" data-width="1920" data-height="1080">
+        <canvas id="b4-cv" width="1920" height="1080"></canvas>
+      </div>
+      <script>
+        (function () {
+          const W = 1920, H = 1080, CX = 960, CY = 540;
+          const B = 60 / 128, DUR = 1.875;
+          const PAPER = "#EEEAE3", INK = [26, 26, 28], RED = [233, 67, 47];
+          const cv = document.getElementById("b4-cv");
+          const ctx = cv.getContext("2d");
+          const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+          const acc = mk(), tmp = mk();
+          const actx = acc.getContext("2d"), tctx = tmp.getContext("2d");
+
+          const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+          const lerp = (a, b, u) => a + (b - a) * u;
+          const prog = (t, a, d) => clamp((t - a) / d);
+          const inOutCubic = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+          const outCubic = (u) => 1 - Math.pow(1 - u, 3);
+          function spring(tau, f = 3.2, z = 0.8) {
+            if (tau <= 0) return 0;
+            const w = 2 * Math.PI * f, wd = w * Math.sqrt(1 - z * z);
+            return 1 - Math.exp(-z * w * tau) * (Math.cos(wd * tau) + ((z * w) / wd) * Math.sin(wd * tau));
+          }
+          // seeded PRNG
+          let seed = 48121;
+          const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+
+          const SP = 40, COLS = 49, ROWS = 28;
+          const OX = CX - ((COLS - 1) * SP) / 2, OY = CY - ((ROWS - 1) * SP) / 2;
+          const O = { x: OX + 12 * SP, y: OY + 15 * SP }; // the human, sends the waves
+          const dots = [];
+          for (let r = 0; r < ROWS; r++)
+            for (let c = 0; c < COLS; c++) {
+              const x = OX + c * SP, y = OY + r * SP;
+              const d = Math.hypot(x - O.x, y - O.y);
+              const v = rnd();
+              dots.push({ x, y, d, dc: Math.hypot(x - CX, y - CY), reply1: v < 0.06, reply2: v < 0.15 });
+            }
+          const WAVES = [B, 2 * B, 3 * B];
+          const DMAX = Math.max(...dots.map((d) => d.dc));
+          const SPEED = 2300;
+
+          function project(x, y, z, tilt) {
+            // rotate about the horizontal axis through the centre, then perspective
+            const yy = y - CY;
+            const c = Math.cos(tilt), s = Math.sin(tilt);
+            const y2 = yy * c - z * s;
+            const z2 = yy * s + z * c;
+            const f = 1500 / (1500 + z2);
+            return [CX + (x - CX) * f, CY + 40 * Math.sin(tilt) + y2 * f, f];
+          }
+
+          function draw(g, t) {
+            g.clearRect(0, 0, W, H);
+            const tilt = (58 * Math.PI) / 180 * inOutCubic(prog(t, 1.32, 0.52));
+            const lift = 0;
+            let replied = 0;
+            for (let i = 0; i < dots.length; i++) {
+              const p = dots[i];
+              // burst out from a cluster at the centre
+              const e = spring(t - 0.0 - p.dc / 7000, 2.6, 0.84);
+              // start packed in a disc (the dissolved ad), same bearing from the centre
+              const k0 = (230 * Math.sqrt(p.dc / DMAX)) / (p.dc || 1);
+              let x = lerp(CX + (p.x - CX) * k0, p.x, e);
+              let y = lerp(CY + (p.y - CY) * k0, p.y, e);
+              let z = 0, size = 1;
+              // dots leave the cluster hot (red) and cool to ink as they land
+              let red = 1 - clamp((e - 0.15) / 0.75);
+              for (let k = 0; k < WAVES.length; k++) {
+                const tw = t - WAVES[k];
+                if (tw < 0) continue;
+                const R = tw * SPEED;
+                const f = Math.exp(-Math.pow((p.d - R) / 48, 2)) * Math.exp(-tw * 0.9);
+                const ux = (p.x - O.x) / (p.d || 1), uy = (p.y - O.y) / (p.d || 1);
+                x += ux * 16 * f; y += uy * 16 * f;
+                z -= 70 * f * (k === 2 ? 1.6 : 0.6);
+                red = Math.max(red, clamp(f * 1.7));
+                size += 1.3 * f;
+                const latched = (k === 0 ? p.reply1 : p.reply2) && R > p.d;
+                if (latched) { red = 1; }
+              }
+              const isReply = (p.reply1 && t > WAVES[0] + p.d / SPEED) || (p.reply2 && t > WAVES[1] + p.d / SPEED);
+              if (isReply) { replied++; size = Math.max(size, 1.55); z -= 30 * prog(t, 1.4, 0.4); }
+              const [sx, sy, f] = project(x, y, z, tilt);
+              const r = 4.3 * size * f * (0.3 + 0.7 * clamp(e * 1.2));
+              const col = INK.map((v, j) => Math.round(lerp(v, RED[j], clamp(red))));
+              g.fillStyle = "rgb(" + col.join(",") + ")";
+              g.beginPath();
+              g.arc(sx, sy, Math.max(0.3, r), 0, Math.PI * 2);
+              g.fill();
+            }
+            // the human: source of every wave
+            const [hx, hy, hf] = project(O.x, O.y, 0, tilt);
+            const hr = 12 * hf * clamp(spring(t - 0.3, 4, 0.8));
+            if (hr > 0.2) {
+              g.fillStyle = "rgb(233,67,47)";
+              g.beginPath(); g.arc(hx, hy, hr, 0, Math.PI * 2); g.fill();
+              // wave rings leaving the source
+              for (let k = 0; k < WAVES.length; k++) {
+                const tw = t - WAVES[k];
+                if (tw < 0 || tw > 0.5) continue;
+                g.strokeStyle = "rgba(233,67,47," + (0.55 * (1 - tw / 0.5)).toFixed(3) + ")";
+                g.lineWidth = 2;
+                g.beginPath(); g.arc(hx, hy, 20 + tw * 260, 0, Math.PI * 2); g.stroke();
+              }
+            }
+            return { replied, hx, hy };
+          }
+
+          function readout(g, t, info) {
+            const a = prog(t, 0.36, 0.1) * (1 - prog(t, 1.34, 0.06));
+            if (a <= 0) return;
+            const wave = t >= WAVES[1] ? 2 : 1;
+            const x = info.hx + 46, y = info.hy - 132;
+            g.globalAlpha = a;
+            // leader from the human to the tag
+            g.strokeStyle = "#1a1a1c"; g.lineWidth = 1.5;
+            g.beginPath(); g.moveTo(info.hx + 14, info.hy - 14); g.lineTo(x - 16, y + 60); g.stroke();
+            g.font = "700 26px 'JB Mono'";
+            if ("letterSpacing" in g) g.letterSpacing = "2px";
+            const l1 = "4,812 CONTACTS · WAVE " + wave;
+            const l2 = "REPLIED " + String(info.replied * 3).padStart(3, "0");
+            const w1 = g.measureText(l1).width;
+            g.fillStyle = PAPER;
+            g.fillRect(x - 16, y - 12, w1 + 34, 86);
+            g.strokeRect(x - 16, y - 12, w1 + 34, 86);
+            g.fillStyle = "#1a1a1c"; g.textBaseline = "top"; g.textAlign = "left";
+            g.fillText(l1, x, y);
+            g.font = "400 22px 'JB Mono'";
+            g.fillStyle = "rgb(233,67,47)";
+            g.fillText(l2, x, y + 40);
+            if ("letterSpacing" in g) g.letterSpacing = "0px";
+            g.globalAlpha = 1;
+          }
+
+          const N = 8, SHUT = 1 / 120;
+          function render(t) {
+            ctx.fillStyle = PAPER;
+            ctx.fillRect(0, 0, W, H);
+            actx.globalCompositeOperation = "source-over";
+            actx.clearRect(0, 0, W, H);
+            let info = null;
+            for (let i = 0; i < N; i++) {
+              const ts = clamp(t + (i / (N - 1) - 0.5) * SHUT, 0, DUR - 0.0001);
+              const inf = draw(tctx, ts);
+              if (i === (N >> 1)) info = inf;
+              actx.globalCompositeOperation = "lighter";
+              actx.globalAlpha = 1 / N;
+              actx.drawImage(tmp, 0, 0);
+            }
+            actx.globalAlpha = 1;
+            actx.globalCompositeOperation = "source-over";
+            ctx.drawImage(acc, 0, 0);
+            readout(ctx, t, info);
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          const clock = { v: 0 };
+          tl.to(clock, { v: 1, duration: DUR, ease: "none", onUpdate: () => render(tl.time()) }, 0);
+          Promise.all([document.fonts.load("700 26px 'JB Mono'"), document.fonts.load("400 22px 'JB Mono'")]).then(() => {
+            render(0);
+            window.__timelines["b4-grid"] = tl;
+          });
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Barlow";
+          src: url("../assets/fonts/Barlow-700.ttf") format("truetype");
+          font-weight: 700;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        #b6-ribbon-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f3c63b;
+        }
+        #b6-cv {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+      <div id="b6-ribbon-root" data-composition-id="b6-ribbon" data-width="1920" data-height="1080">
+        <canvas id="b6-cv" width="1920" height="1080"></canvas>
+      </div>
+      <script>
+        (function () {
+          const W = 1920, H = 1080;
+          const B = 60 / 128, DUR = 1.875;
+          const YEL = "#F3C63B", INK = "#141416", RED = "#E9432F", PAPER = "#F4F1EA", COB = "#2E3DF2";
+          const cv = document.getElementById("b6-cv");
+          const ctx = cv.getContext("2d");
+          const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+          const acc = mk(), tmp = mk();
+          const actx = acc.getContext("2d"), tctx = tmp.getContext("2d");
+          const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+          const lerp = (a, b, u) => a + (b - a) * u;
+          const prog = (t, a, d) => clamp((t - a) / d);
+          const outCubic = (u) => 1 - Math.pow(1 - u, 3);
+          const outExpo = (u) => (u >= 1 ? 1 : 1 - Math.pow(2, -10 * u));
+
+          // journey path through four stations, with a loop at CALL
+          const CP = [
+            [-300, 840], [80, 790], [380, 720], [600, 560], [800, 440], [1000, 380], [1190, 430],
+            [1300, 560], [1240, 700], [1100, 720], [1030, 600], [1110, 470], [1290, 430],
+            [1480, 520], [1620, 650], [1820, 700], [2050, 640], [2350, 560],
+          ];
+          // Catmull-Rom sampled to a dense polyline with arc length
+          const P = [];
+          for (let i = 0; i < CP.length - 1; i++) {
+            const p0 = CP[Math.max(0, i - 1)], p1 = CP[i], p2 = CP[i + 1], p3 = CP[Math.min(CP.length - 1, i + 2)];
+            for (let k = 0; k < 40; k++) {
+              const u = k / 40, u2 = u * u, u3 = u2 * u;
+              const f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * u + (2 * a - 5 * b + 4 * c - d) * u2 + (-a + 3 * b - 3 * c + d) * u3);
+              P.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
+            }
+          }
+          P.push(CP[CP.length - 1]);
+          const S = [0];
+          for (let i = 1; i < P.length; i++) S.push(S[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+          const LT = S[S.length - 1];
+          const at = (s) => {
+            s = clamp(s, 0, LT);
+            let lo = 0, hi = S.length - 1;
+            while (hi - lo > 1) { const m = (lo + hi) >> 1; if (S[m] < s) lo = m; else hi = m; }
+            const u = (s - S[lo]) / (S[hi] - S[lo] || 1);
+            return [lerp(P[lo][0], P[hi][0], u), lerp(P[lo][1], P[hi][1], u), lo];
+          };
+          const nearestS = (x, y) => { let b = 0, bd = 1e9; for (let i = 0; i < P.length; i++) { const d = Math.hypot(P[i][0] - x, P[i][1] - y); if (d < bd) { bd = d; b = i; } } return S[b]; };
+          const STATIONS = [
+            { name: "AD", s: nearestS(380, 720), side: [0, 64] },
+            { name: "PAGE", s: nearestS(800, 440), side: [0, -70] },
+            { name: "CALL", s: nearestS(1300, 560), side: [74, 0] },
+            { name: "CLOSED", s: nearestS(1620, 650), side: [0, 72] },
+          ];
+          const SPLIT = nearestS(1030, 600); // draw order split so the loop crosses over itself
+          const RIB = 1150;
+
+          // head position along the path: quick entry, eases through stations, exits right
+          function head(t) {
+            const u = prog(t, 0.0, 1.8);
+            const e = u < 0.5 ? 0.5 * Math.pow(2 * u, 1.35) : 1 - 0.5 * Math.pow(2 - 2 * u, 1.35);
+            return lerp(-60, LT + RIB, e);
+          }
+
+          function strokePart(g, s0, s1, cap) {
+            if (s1 - s0 < 2) return;
+            const pts = [];
+            const n = Math.max(2, Math.ceil((s1 - s0) / 6));
+            for (let i = 0; i <= n; i++) pts.push(at(lerp(s0, s1, i / n)));
+            const layers = [[60, INK], [48, RED], [32, PAPER], [14, COB]];
+            for (const [w, c] of layers) {
+              g.strokeStyle = c; g.lineWidth = w; g.lineCap = cap; g.lineJoin = "round";
+              g.beginPath();
+              g.moveTo(pts[0][0], pts[0][1]);
+              for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+              g.stroke();
+            }
+          }
+
+          function drawRibbon(g, t) {
+            g.clearRect(0, 0, W, H);
+            const h = head(t), tl0 = Math.max(0, h - RIB);
+            const s1 = Math.min(LT, h);
+            if (s1 <= tl0) return;
+            // round caps only at the free ends
+            if (tl0 < SPLIT && s1 > SPLIT) {
+              strokePart(g, tl0, SPLIT + 1, "round");
+              strokePart(g, SPLIT, s1, "round");
+            } else strokePart(g, tl0, s1, "round");
+          }
+
+          function drawStations(g, t) {
+            const h = head(t);
+            if ("letterSpacing" in g) g.letterSpacing = "5px";
+            STATIONS.forEach((st, i) => {
+              const [x, y] = at(st.s);
+              const show = outCubic(prog(t, 0.05 + i * 0.06, 0.2));
+              if (show <= 0) return;
+              const hit = h >= st.s;
+              const th = hit ? t - (STATIONS[i].tHit || 0) : 0;
+              const lx = x + st.side[0], ly = y + st.side[1];
+              // label
+              g.globalAlpha = show * (hit ? 1 : 0.4);
+              g.font = "700 26px Barlow";
+              g.textAlign = st.side[0] > 0 ? "left" : "center";
+              g.textBaseline = "middle";
+              g.fillStyle = INK;
+              g.fillText(st.name, lx, ly);
+              g.font = "400 15px 'JB Mono'";
+              if ("letterSpacing" in g) g.letterSpacing = "2px";
+              g.fillText("0" + (i + 1), lx + (st.side[0] > 0 ? 0 : 0), ly - 26);
+              if ("letterSpacing" in g) g.letterSpacing = "5px";
+              g.globalAlpha = 1;
+            });
+            if ("letterSpacing" in g) g.letterSpacing = "0px";
+          }
+
+          function drawMarkers(g, t) {
+            const h = head(t);
+            STATIONS.forEach((st, i) => {
+              const [x, y] = at(st.s);
+              const show = outCubic(prog(t, 0.05 + i * 0.06, 0.2));
+              if (show <= 0) return;
+              // time the head reached this station
+              let tHit = null;
+              for (let k = 0; k <= 120; k++) { const tt = (k / 120) * DUR; if (head(tt) >= st.s) { tHit = tt; break; } }
+              const hit = tHit !== null && t >= tHit;
+              const r = 15 * show;
+              g.lineWidth = 4; g.strokeStyle = INK;
+              g.fillStyle = hit ? RED : YEL;
+              g.beginPath(); g.arc(x, y, r * (hit ? 1 + 0.5 * Math.exp(-(t - tHit) / 0.06) : 1), 0, Math.PI * 2); g.fill(); g.stroke();
+              if (hit) {
+                const u = prog(t, tHit, 0.32);
+                if (u < 1) {
+                  g.strokeStyle = INK; g.lineWidth = 4; g.lineCap = "round";
+                  g.globalAlpha = 1 - u;
+                  for (let k = 0; k < 10; k++) {
+                    const a = (k / 10) * Math.PI * 2 + 0.2;
+                    const r0 = 30 + 40 * outExpo(u), r1 = r0 + 16 * (1 - u);
+                    g.beginPath(); g.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0); g.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); g.stroke();
+                  }
+                  g.globalAlpha = 1;
+                }
+              }
+            });
+          }
+
+          const N = 8, SHUT = 1 / 60;
+          function render(t) {
+            ctx.fillStyle = YEL;
+            ctx.fillRect(0, 0, W, H);
+            // faint route preview, dashed, so the journey reads before the ribbon arrives
+            const pv = prog(t, 0.0, 0.25);
+            ctx.globalAlpha = 0.28 * pv;
+            ctx.setLineDash([2, 14]); ctx.lineCap = "round";
+            ctx.strokeStyle = INK; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]);
+            for (let i = 1; i < P.length; i += 2) ctx.lineTo(P[i][0], P[i][1]);
+            ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+            drawStations(ctx, t);
+            actx.globalCompositeOperation = "source-over";
+            actx.clearRect(0, 0, W, H);
+            for (let i = 0; i < N; i++) {
+              const ts = clamp(t + (i / (N - 1) - 0.5) * SHUT, 0, DUR - 0.0001);
+              drawRibbon(tctx, ts);
+              actx.globalCompositeOperation = "lighter";
+              actx.globalAlpha = 1 / N;
+              actx.drawImage(tmp, 0, 0);
+            }
+            actx.globalAlpha = 1;
+            actx.globalCompositeOperation = "source-over";
+            ctx.drawImage(acc, 0, 0);
+            drawMarkers(ctx, t);
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          const clock = { v: 0 };
+          tl.to(clock, { v: 1, duration: DUR, ease: "none", onUpdate: () => render(tl.time()) }, 0);
+          Promise.all([document.fonts.load("700 26px Barlow"), document.fonts.load("400 15px 'JB Mono'")]).then(() => {
+            render(0);
+            window.__timelines["b6-ribbon"] = tl;
+          });
+        })();
+      </script>
+    </template>
+  </body>
+</html>

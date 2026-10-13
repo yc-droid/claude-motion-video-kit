@@ -1,0 +1,602 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Inter Tight";
+          src: url("../assets/fonts/InterTight-Var.woff2") format("woff2");
+          font-weight: 100 900;
+        }
+        @font-face {
+          font-family: "Instrument Serif";
+          src: url("../assets/fonts/InstrumentSerif-Italic.woff2") format("woff2");
+          font-style: italic;
+          font-weight: 400;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+          font-weight: 700;
+        }
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f2f0eb;
+          color: #121212;
+          font-family: "Inter Tight", sans-serif;
+        }
+        .s5-mono {
+          font-family: "JB Mono", monospace;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          white-space: nowrap;
+          line-height: 1;
+        }
+        #s5-kick {
+          position: absolute;
+          left: 84px;
+          top: 112px;
+          font-size: 15px;
+          color: #6e6a62;
+        }
+        #s5-head {
+          position: absolute;
+          left: 84px;
+          top: 136px;
+          font-size: 84px;
+          font-weight: 780;
+          letter-spacing: -0.045em;
+          line-height: 1;
+          white-space: nowrap;
+        }
+        #s5-head .w {
+          display: inline-block;
+          margin-right: 0.18em;
+        }
+        #s5-head .acc {
+          font-family: "Instrument Serif", serif;
+          font-style: italic;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+          color: #2b4bff;
+        }
+
+        /* card shell: clip-path rectangles driven per frame */
+        .s5-layer {
+          position: absolute;
+          inset: 0;
+        }
+        #s5-shadow-wrap {
+          position: absolute;
+          inset: 0;
+          filter: blur(18px);
+          opacity: 0.1;
+          transform: translateY(16px);
+        }
+        #s5-shadow {
+          position: absolute;
+          inset: 0;
+          background: #121212;
+        }
+        #s5-border {
+          position: absolute;
+          inset: 0;
+          background: #d6d1c6;
+        }
+        #s5-fill {
+          position: absolute;
+          inset: 0;
+          background: #2b4bff;
+        }
+        .s5-state {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+        }
+        .s5-abs {
+          position: absolute;
+        }
+        .s5-dl {
+          font-size: 13px;
+          color: #6e6a62;
+        }
+        .s5-title {
+          font-size: 34px;
+          font-weight: 720;
+          letter-spacing: -0.03em;
+          line-height: 1;
+          white-space: nowrap;
+        }
+        .s5-pill {
+          width: 132px;
+          height: 34px;
+          border-radius: 17px;
+          border: 1.5px solid #121212;
+          background: #ffffff;
+          will-change: transform;
+        }
+        .s5-pill .lab {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          font-size: 13px;
+          font-weight: 700;
+        }
+        .s5-pill .on {
+          color: #ffffff;
+          opacity: 0;
+        }
+        .s5-pill .on svg {
+          width: 14px;
+          height: 14px;
+        }
+        .blk {
+          position: absolute;
+          border-radius: 6px;
+          background: #ebe8e1;
+        }
+        .blk.d { background: #dcd8cf; }
+        .blk.i { background: #1c1c1c; }
+        .blk.c { background: #2b4bff; }
+        .blk.o {
+          background: transparent;
+          border: 1.5px solid #e2ded5;
+        }
+        .tiny {
+          position: absolute;
+          font-size: 11px;
+          color: #6e6a62;
+        }
+
+        /* bottom zone */
+        .s5-chip {
+          position: absolute;
+          top: 752px;
+          height: 36px;
+          padding: 0 14px 0 12px;
+          border-radius: 18px;
+          border: 1.5px solid #121212;
+          background: #f7f6f2;
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          font-size: 13px;
+          will-change: transform;
+        }
+        .s5-chip i {
+          display: block;
+          width: 9px;
+          height: 9px;
+          border-radius: 2px;
+          background: #2b4bff;
+        }
+        #s5-badge {
+          position: absolute;
+          left: 84px;
+          top: 806px;
+          height: 40px;
+          width: 330px;
+          border-radius: 20px;
+          background: #121212;
+          will-change: transform;
+        }
+        #s5-badge .lab {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding-left: 16px;
+          font-size: 14px;
+          font-weight: 700;
+          color: #f2f0eb;
+        }
+        #s5-badge .lab svg {
+          width: 15px;
+          height: 15px;
+        }
+        #s5-badge-fill {
+          position: absolute;
+          inset: 0;
+          border-radius: 20px;
+          background: #2b4bff;
+          opacity: 0;
+        }
+        .s5-log {
+          position: absolute;
+          left: 84px;
+          font-size: 13px;
+          color: #6e6a62;
+        }
+        .s5-log b {
+          color: #121212;
+          font-weight: 700;
+        }
+        #s5-cnt-lab {
+          position: absolute;
+          right: 84px;
+          top: 796px;
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          font-size: 15px;
+        }
+        #s5-illu {
+          height: 24px;
+          padding: 0 8px;
+          border: 1.5px solid #6e6a62;
+          border-radius: 12px;
+          color: #6e6a62;
+          font-size: 11px;
+          display: flex;
+          align-items: center;
+        }
+        #s5-cnt {
+          position: absolute;
+          right: 80px;
+          top: 824px;
+          height: 150px;
+          display: flex;
+          font-size: 150px;
+          font-weight: 800;
+          letter-spacing: -0.05em;
+          line-height: 150px;
+          font-variant-numeric: tabular-nums;
+          color: #2b4bff;
+        }
+        .s5-col {
+          position: relative;
+          display: block;
+          width: 0.6em;
+          height: 150px;
+          overflow: hidden;
+        }
+        .s5-strip {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          display: block;
+          will-change: transform;
+        }
+        .s5-strip b {
+          display: block;
+          height: 150px;
+          line-height: 150px;
+          text-align: center;
+          font-weight: 800;
+        }
+
+        /* cursor */
+        #s5-cur {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 30px;
+          height: 38px;
+          will-change: transform;
+        }
+        #s5-cur-in {
+          width: 30px;
+          height: 38px;
+          transform-origin: 4px 4px;
+        }
+      </style>
+
+      <div id="root" data-composition-id="s5-card" data-width="1080" data-height="1080">
+        <svg width="0" height="0" style="position: absolute">
+          <defs>
+            <filter id="s5-vb0" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s5-vbg0" stdDeviation="0 0" /></filter>
+            <filter id="s5-vb1" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s5-vbg1" stdDeviation="0 0" /></filter>
+          </defs>
+        </svg>
+
+        <div id="s5-kick" class="s5-mono">MARKETING ENGINEER · THIS WEEK</div>
+        <div id="s5-head"><span class="w">AI</span><span class="w">+</span><span class="w">1</span><span class="w acc">human.</span></div>
+
+        <div id="s5-shadow-wrap"><div id="s5-shadow"></div></div>
+        <div id="s5-border"></div>
+        <div id="s5-fill"></div>
+        <div id="s5-states" class="s5-layer"></div>
+
+        <div id="s5-chips"></div>
+        <div id="s5-badge">
+          <div id="s5-badge-fill"></div>
+          <div class="lab s5-mono" id="s5-badge-a"><span>1 HUMAN · REVIEWING</span></div>
+          <div class="lab s5-mono" id="s5-badge-b" style="opacity: 0">
+            <svg viewBox="0 0 16 16"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            <span>1 HUMAN · REVIEWED</span>
+          </div>
+        </div>
+        <div id="s5-logs"></div>
+
+        <div id="s5-cnt-lab" class="s5-mono"><span id="s5-illu">ILLUSTRATIVE</span><span>SHIPPED THIS WEEK</span></div>
+        <div id="s5-cnt">
+          <span class="s5-col" id="s5-c0"><span class="s5-strip" data-layout-allow-overflow id="s5-s0"></span></span>
+          <span class="s5-col" id="s5-c1"><span class="s5-strip" data-layout-allow-overflow id="s5-s1"></span></span>
+        </div>
+
+        <div id="s5-cur" data-hf-motion-blur>
+          <div id="s5-cur-in">
+            <svg width="30" height="38" viewBox="0 0 30 38">
+              <path d="M3 3 L3 31 L10.5 24 L15.5 35 L20 33 L15 22.5 L25 22.5 Z" fill="#121212" stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const spring = (z, k) => {
+            if (z >= 0.999) return (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-k * p) * (1 + k * p));
+            const wd = k * Math.sqrt(1 - z * z);
+            return (p) => {
+              if (p <= 0) return 0;
+              if (p >= 1) return 1;
+              return 1 - Math.exp(-z * k * p) * (Math.cos(wd * p) + ((z * k) / wd) * Math.sin(wd * p));
+            };
+          };
+          const SPR = spring(0.78, 11);
+          const MORPH = spring(0.8, 10);
+          const BEAT = 1.951333 / 4;
+          const b = (k) => k * BEAT;
+          const CX = 540, CY = 520;
+          const CHECK = '<svg viewBox="0 0 16 16"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+          // ---------- shell keyframes ----------
+          const STATES = [
+            { w: 600, h: 360, r: 22, title: "Landing page", agent: "COPY AGENT", log: ["COPY AGENT", "LANDING PAGE DRAFTED, 3 HEADLINES"] },
+            { w: 520, h: 404, r: 30, title: "Ad set", agent: "ADS AGENT", log: ["ADS AGENT", "12 VARIANTS RENDERED"] },
+            { w: 660, h: 300, r: 16, title: "40 emails", agent: "EMAIL AGENT", log: ["EMAIL AGENT", "40 EMAILS SCHEDULED"] },
+            { w: 620, h: 380, r: 24, title: "CRM", agent: "CRM AGENT", log: ["CRM AGENT", "PIPELINE SYNCED, 0 DUPES"] },
+          ];
+          const START = { w: 180, h: 111, r: 15 }; // the hero day from the month, scaled 1.5x
+          const S_AT = STATES.map((_, k) => b(2 * k)); // 0, .976, 1.951, 2.927
+          const MORPH_D = 0.52;
+          function shellAt(t) {
+            let cur = START;
+            let out = { ...START };
+            for (let k = 0; k < STATES.length; k++) {
+              if (t < S_AT[k]) break;
+              const p = MORPH((t - S_AT[k]) / MORPH_D);
+              const nx = STATES[k];
+              out = {
+                w: cur.w + (nx.w - cur.w) * p,
+                h: cur.h + (nx.h - cur.h) * p,
+                r: cur.r + (nx.r - cur.r) * p,
+              };
+              cur = nx;
+            }
+            return out;
+          }
+          const ins = (w, h, r, grow) => {
+            const x0 = CX - w / 2 - grow, y0 = CY - h / 2 - grow;
+            const x1 = 1080 - (CX + w / 2 + grow), y1 = 1080 - (CY + h / 2 + grow);
+            return "inset(" + y0.toFixed(2) + "px " + x1.toFixed(2) + "px " + y1.toFixed(2) + "px " + x0.toFixed(2) + "px round " + (r + grow).toFixed(2) + "px)";
+          };
+          const fillEl = document.getElementById("s5-fill");
+          const borderEl = document.getElementById("s5-border");
+          const shadowEl = document.getElementById("s5-shadow");
+          function paintShell(t) {
+            const s = shellAt(t);
+            fillEl.style.clipPath = ins(s.w, s.h, s.r, 0);
+            borderEl.style.clipPath = ins(s.w, s.h, s.r, 1.5);
+            shadowEl.style.clipPath = ins(s.w * 0.92, s.h * 0.9, s.r, 0);
+          }
+
+          // ---------- state content ----------
+          const statesEl = document.getElementById("s5-states");
+          const pillPos = [];
+          STATES.forEach((st, k) => {
+            const L = CX - st.w / 2, T = CY - st.h / 2;
+            const px = L + st.w - 24 - 132, py = T + 22;
+            pillPos.push({ x: px + 66, y: py + 17 });
+            let body = "";
+            const bx = L + 24, by = T + 96, bw = st.w - 48;
+            if (k === 0) {
+              // landing page wireframe inside a browser frame
+              body += `<div class="blk o" style="left:${bx}px;top:${by}px;width:${bw}px;height:${st.h - 120}px;border-radius:12px"></div>`;
+              body += `<div class="blk" style="left:${bx + 14}px;top:${by + 14}px;width:9px;height:9px;border-radius:5px"></div>`;
+              body += `<div class="blk" style="left:${bx + 28}px;top:${by + 14}px;width:9px;height:9px;border-radius:5px"></div>`;
+              body += `<div class="blk" style="left:${bx + 42}px;top:${by + 14}px;width:9px;height:9px;border-radius:5px"></div>`;
+              body += `<div class="blk" style="left:${bx + 66}px;top:${by + 11}px;width:${bw - 90}px;height:15px;border-radius:8px"></div>`;
+              body += `<div class="blk i" style="left:${bx + 24}px;top:${by + 60}px;width:250px;height:20px;border-radius:4px"></div>`;
+              body += `<div class="blk i" style="left:${bx + 24}px;top:${by + 88}px;width:190px;height:20px;border-radius:4px"></div>`;
+              body += `<div class="blk d" style="left:${bx + 24}px;top:${by + 124}px;width:230px;height:9px;border-radius:4px"></div>`;
+              body += `<div class="blk d" style="left:${bx + 24}px;top:${by + 140}px;width:200px;height:9px;border-radius:4px"></div>`;
+              body += `<div class="blk c" style="left:${bx + 24}px;top:${by + 168}px;width:104px;height:32px;border-radius:16px"></div>`;
+              body += `<div class="blk" style="left:${bx + bw - 214}px;top:${by + 52}px;width:190px;height:154px;border-radius:10px"></div>`;
+            } else if (k === 1) {
+              const tw = (bw - 24) / 3;
+              for (let i = 0; i < 3; i++) {
+                const x = bx + i * (tw + 12);
+                const tone = ["#dcd8cf", "#e6e2da", "#d2cdc2"][i];
+                body += `<div class="blk o" style="left:${x}px;top:${by}px;width:${tw}px;height:${st.h - 150}px;border-radius:12px"></div>`;
+                body += `<div class="blk" style="left:${x + 8}px;top:${by + 8}px;width:${tw - 16}px;height:${tw - 6}px;border-radius:8px;background:${tone}"></div>`;
+                body += `<div class="blk i" style="left:${x + 10}px;top:${by + tw + 14}px;width:${tw - 40}px;height:12px;border-radius:3px"></div>`;
+                body += `<div class="blk d" style="left:${x + 10}px;top:${by + tw + 34}px;width:${tw - 26}px;height:8px;border-radius:3px"></div>`;
+                body += `<div class="blk ${i === 1 ? "c" : "d"}" style="left:${x + 10}px;top:${by + tw + 56}px;width:70px;height:22px;border-radius:11px"></div>`;
+              }
+              body += `<div class="tiny s5-mono" style="left:${bx}px;top:${T + st.h - 38}px">3 OF 12 VARIANTS · 1:1 · 4:5 · 9:16</div>`;
+            } else if (k === 2) {
+              for (let i = 0; i < 4; i++) {
+                const y = by + i * 38;
+                body += `<div class="blk d" style="left:${bx}px;top:${y + 4}px;width:22px;height:22px;border-radius:11px"></div>`;
+                body += `<div class="blk i" style="left:${bx + 36}px;top:${y + 9}px;width:${[96, 120, 84, 108][i]}px;height:11px;border-radius:3px"></div>`;
+                body += `<div class="blk" style="left:${bx + 172}px;top:${y + 9}px;width:${[250, 210, 270, 230][i]}px;height:11px;border-radius:3px"></div>`;
+                body += `<div class="tiny s5-mono" style="left:${bx + bw - 86}px;top:${y + 9}px;color:#2b4bff">SCHEDULED</div>`;
+              }
+              body += `<div class="tiny s5-mono" style="left:${bx}px;top:${T + st.h - 34}px">+ 36 MORE · PERSONALISED PER LEAD</div>`;
+            } else {
+              const cols = ["NEW", "MEETING", "WON"];
+              const cw = (bw - 24) / 3;
+              const counts = [3, 2, 1];
+              cols.forEach((c, i) => {
+                const x = bx + i * (cw + 12);
+                body += `<div class="tiny s5-mono" style="left:${x}px;top:${by}px">${c} · ${counts[i]}</div>`;
+                for (let j = 0; j < counts[i]; j++) {
+                  const y = by + 24 + j * 62;
+                  const won = i === 2;
+                  body += `<div class="blk ${won ? "" : "o"}" style="left:${x}px;top:${y}px;width:${cw}px;height:52px;border-radius:10px;${won ? "background:#e9edff;" : ""}"></div>`;
+                  if (won) body += `<div class="blk c" style="left:${x}px;top:${y}px;width:5px;height:52px;border-radius:3px"></div>`;
+                  body += `<div class="blk i" style="left:${x + 14}px;top:${y + 14}px;width:${cw * 0.55}px;height:10px;border-radius:3px"></div>`;
+                  body += `<div class="blk d" style="left:${x + 14}px;top:${y + 31}px;width:${cw * 0.38}px;height:8px;border-radius:3px"></div>`;
+                }
+              });
+            }
+            const html =
+              `<div class="s5-state" id="s5-st${k}">` +
+              `<div class="s5-abs s5-dl s5-mono" style="left:${L + 24}px;top:${T + 24}px">DELIVERABLE 0${k + 1} / 04</div>` +
+              `<div class="s5-abs s5-title" style="left:${L + 24}px;top:${T + 46}px">${st.title}</div>` +
+              `<div class="s5-abs s5-pill" id="s5-pill${k}" style="left:${px}px;top:${py}px">` +
+              `<div class="s5-abs" id="s5-pf${k}" style="inset:-1.5px;border-radius:17px;background:#2b4bff;opacity:0"></div>` +
+              `<div class="lab s5-mono" id="s5-po${k}">APPROVE</div>` +
+              `<div class="lab on s5-mono" id="s5-pn${k}">${CHECK}<span>SHIPPED</span></div>` +
+              `</div>` +
+              body +
+              `</div>`;
+            statesEl.insertAdjacentHTML("beforeend", html);
+          });
+
+          // chips + log lines
+          const chipsEl = document.getElementById("s5-chips");
+          let cx = 84;
+          STATES.forEach((st, k) => {
+            const w = 52 + st.agent.length * 9.4;
+            chipsEl.insertAdjacentHTML("beforeend", `<div class="s5-chip s5-mono" id="s5-chip${k}" style="left:${cx}px"><i></i><span>${st.agent}</span></div>`);
+            cx += w + 10;
+          });
+          const logsEl = document.getElementById("s5-logs");
+          STATES.forEach((st, k) => {
+            logsEl.insertAdjacentHTML(
+              "beforeend",
+              `<div class="s5-log s5-mono" id="s5-log${k}" style="top:${872 + k * 24}px"><b>${st.log[0]}</b> · ${st.log[1]}</div>`,
+            );
+          });
+
+          // ---------- counter (odometer) ----------
+          const LINE = 150;
+          const strips = [0, 1].map((i) => document.getElementById("s5-s" + i));
+          const blurs = [0, 1].map((i) => document.getElementById("s5-vbg" + i));
+          let h0 = "", h1 = "";
+          for (let d = 0; d <= 10; d++) h0 += "<b>" + (d === 0 ? "&nbsp;" : d % 10) + "</b>";
+          for (let d = 0; d <= 60; d++) h1 += "<b>" + (d % 10) + "</b>";
+          strips[0].innerHTML = h0;
+          strips[1].innerHTML = h1;
+          [0, 1].forEach((i) => (document.getElementById("s5-c" + i).style.filter = "url(#s5-vb" + i + ")"));
+          const VALS = [3, 12, 24, 36, 47];
+          const CLICK = S_AT.map((s) => s + BEAT); // clicks land on the off-beat-of-bar beats
+          const cntE = spring(1.0, 12);
+          function cntVal(t) {
+            let v = VALS[0];
+            for (let k = 0; k < CLICK.length; k++) {
+              if (t >= CLICK[k]) v = VALS[k] + (VALS[k + 1] - VALS[k]) * cntE((t - CLICK[k]) / 0.42);
+            }
+            return v;
+          }
+          function paintCnt(t) {
+            const v = cntVal(t);
+            const vel = (cntVal(t + 1 / 120) - cntVal(t - 1 / 120)) * 60;
+            const ones = v % 10;
+            const carry = Math.max(0, ones - 9);
+            const pos = [Math.floor(v / 10) + carry, v];
+            const vels = [carry > 0 ? vel : 0, vel];
+            for (let i = 0; i < 2; i++) {
+              strips[i].style.transform = "translateY(" + (-pos[i] * LINE).toFixed(2) + "px)";
+              const bl = Math.min(18, Math.abs(vels[i]) * LINE * (1 / 60) * 0.45);
+              blurs[i].setAttribute("stdDeviation", "0 " + (bl < 0.15 ? 0 : bl.toFixed(2)));
+            }
+          }
+
+          // ---------- timeline ----------
+          const tl = gsap.timeline({ paused: true });
+          const drv = { v: 0 };
+          tl.to(drv, { v: 1, duration: 3.902, ease: "none", onUpdate: () => { const t = tl.time(); paintShell(t); paintCnt(t); } }, 0);
+          paintShell(0);
+          paintCnt(0);
+
+          // the cobalt day turns into a white card as it opens
+          tl.fromTo("#s5-fill", { backgroundColor: "#2b4bff" }, { backgroundColor: "#ffffff", duration: 0.22, ease: "power2.out" }, 0.04);
+
+          // headline + kicker
+          tl.fromTo("#s5-kick", { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.3, ease: "expo.out" }, 0.02);
+          tl.fromTo(
+            "#s5-head .w",
+            { opacity: 0, y: 30, filter: "blur(10px)" },
+            { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out", stagger: 0.045 },
+            0.04,
+          );
+          tl.fromTo("#s5-cnt-lab", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.26, ease: "power3.out" }, 0.1);
+          tl.fromTo("#s5-cnt", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.34, ease: SPR }, 0.12);
+
+          // content swaps: exit (blur up) fully completes before the next state enters
+          STATES.forEach((st, k) => {
+            const s = S_AT[k];
+            const enterAt = s + (k === 0 ? 0.2 : 0.17);
+            tl.fromTo(
+              "#s5-st" + k,
+              { opacity: 0, y: 14, filter: "blur(9px)" },
+              { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.26, ease: "power3.out" },
+              enterAt,
+            );
+            if (k < STATES.length - 1) {
+              tl.to("#s5-st" + k, { opacity: 0, y: -12, filter: "blur(8px)", duration: 0.14, ease: "power2.in" }, S_AT[k + 1]);
+            }
+            // agent chip
+            tl.fromTo("#s5-chip" + k, { opacity: 0, scale: 0.6, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 0.36, ease: SPR }, s + 0.16);
+            // the human approves on the beat
+            const c = CLICK[k];
+            tl.fromTo("#s5-pill" + k, { scale: 1 }, { scale: 0.9, duration: 0.06, ease: "power2.in" }, c - 0.06);
+            tl.to("#s5-pill" + k, { scale: 1, duration: 0.34, ease: SPR }, c);
+            tl.fromTo("#s5-pf" + k, { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "none" }, c);
+            tl.to("#s5-po" + k, { opacity: 0, y: -8, filter: "blur(6px)", duration: 0.1, ease: "power2.in" }, c);
+            tl.fromTo("#s5-pn" + k, { opacity: 0, y: 8, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.18, ease: "power3.out" }, c + 0.1);
+            tl.fromTo("#s5-chip" + k + " i", { scale: 1 }, { scale: 1.7, duration: 0.08, ease: "power2.out", yoyo: true, repeat: 1 }, c);
+            tl.fromTo("#s5-log" + k, { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.22, ease: "expo.out" }, c + 0.02);
+          });
+
+          // human badge: reviewing from the first click, reviewed on the last
+          tl.fromTo("#s5-badge", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.38, ease: SPR, transformOrigin: "0% 50%" }, CLICK[0] + 0.04);
+          const LAST = CLICK[3];
+          tl.to("#s5-badge-a", { opacity: 0, y: -8, filter: "blur(6px)", duration: 0.1, ease: "power2.in" }, LAST);
+          tl.fromTo("#s5-badge-fill", { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "none" }, LAST + 0.04);
+          tl.fromTo("#s5-badge-b", { opacity: 0, y: 8, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, LAST + 0.1);
+          tl.fromTo("#s5-badge", { scale: 1 }, { scale: 1.06, duration: 0.08, ease: "power2.out", immediateRender: false }, LAST);
+          tl.to("#s5-badge", { scale: 1, duration: 0.3, ease: SPR }, LAST + 0.08);
+
+          // ---------- cursor (the human) ----------
+          const TIP = { x: 4, y: 4 };
+          const at = (p) => ({ x: p.x - TIP.x + 10, y: p.y - TIP.y + 6 });
+          const p0 = at(pillPos[0]);
+          tl.fromTo("#s5-cur", { x: 1110, y: 1110 }, { x: p0.x, y: p0.y, duration: 0.42, ease: "power3.out" }, CLICK[0] - 0.46);
+          for (let k = 1; k < STATES.length; k++) {
+            const pk = at(pillPos[k]);
+            const pp = at(pillPos[k - 1]);
+            tl.fromTo("#s5-cur", { x: pp.x, y: pp.y }, { x: pk.x, y: pk.y, duration: 0.32, ease: "power3.inOut", immediateRender: false }, CLICK[k] - 0.4);
+          }
+          const pl = at(pillPos[3]);
+          tl.fromTo("#s5-cur", { x: pl.x, y: pl.y }, { x: pl.x + 60, y: pl.y + 150, duration: 0.4, ease: "power2.inOut", immediateRender: false }, LAST + 0.12);
+          CLICK.forEach((c) => {
+            tl.fromTo("#s5-cur-in", { scale: 1 }, { scale: 0.82, duration: 0.06, ease: "power2.in", immediateRender: false }, c - 0.06);
+            tl.to("#s5-cur-in", { scale: 1, duration: 0.22, ease: SPR }, c);
+          });
+
+          window.__timelines["s5-card"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

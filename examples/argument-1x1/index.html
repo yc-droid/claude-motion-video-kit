@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1080" />
+    <title>Marketing engineer v2: RENT.</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "JB Mono";
+        src: url("assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "JB Mono";
+        src: url("assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+        font-weight: 700;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f2f0eb;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #f2f0eb;
+      }
+      #paper {
+        position: absolute;
+        inset: 0;
+        background: #f2f0eb;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* ---------- designer-frame chrome (always on top) ---------- */
+      #chrome {
+        position: absolute;
+        inset: 0;
+        z-index: 50;
+        pointer-events: none;
+        font-family: "JB Mono", ui-monospace, monospace;
+        font-size: 15px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--chrome-c, #6e6a62);
+        --chrome-strong: #1a1a1a;
+        --chrome-line: rgba(26, 26, 26, 0.16);
+        --chrome-fill: #1a1a1a;
+      }
+      .cross {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+      }
+      .cross::before,
+      .cross::after {
+        content: "";
+        position: absolute;
+        background: var(--chrome-line);
+      }
+      .cross::before {
+        left: 10px;
+        top: 0;
+        width: 1.5px;
+        height: 22px;
+      }
+      .cross::after {
+        top: 10px;
+        left: 0;
+        height: 1.5px;
+        width: 22px;
+      }
+      #x-tl { left: 45px; top: 45px; }
+      #x-tr { right: 45px; top: 45px; }
+      #x-bl { left: 45px; bottom: 45px; }
+      #x-br { right: 45px; bottom: 45px; }
+      .meta {
+        position: absolute;
+        white-space: nowrap;
+        line-height: 1;
+      }
+      #m-tl { left: 84px; top: 50px; color: var(--chrome-strong); font-weight: 700; }
+      #m-tl span { color: var(--chrome-c, #6e6a62); font-weight: 400; margin-left: 18px; }
+      #m-tr { right: 84px; top: 50px; font-variant-numeric: tabular-nums; }
+      #m-bl { left: 84px; bottom: 50px; color: var(--chrome-strong); }
+      #m-br {
+        right: 84px;
+        bottom: 50px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-variant-numeric: tabular-nums;
+      }
+      #beats {
+        display: flex;
+        gap: 5px;
+      }
+      #beats i {
+        display: block;
+        width: 10px;
+        height: 10px;
+        border: 1.5px solid var(--chrome-strong);
+        background: transparent;
+      }
+      #beats i.on {
+        background: var(--chrome-strong);
+      }
+      #rail {
+        position: absolute;
+        left: 84px;
+        right: 84px;
+        bottom: 84px;
+        height: 1.5px;
+        background: var(--chrome-line);
+      }
+      #rail-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--chrome-fill);
+        transform-origin: left center;
+        transform: scaleX(0);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="15"
+      data-width="1080"
+      data-height="1080"
+      data-fps="60"
+    >
+      <div id="paper"></div>
+
+      <!-- ===== scenes (each a sub-composition) ===== -->
+      <div
+        id="s1-retainer"
+        class="scene clip"
+        data-composition-id="s1-retainer"
+        data-composition-src="compositions/s1-retainer.html"
+        data-start="0"
+        data-duration="2.947"
+        data-track-index="1"
+        data-width="1080"
+        data-height="1080"
+      ></div>
+      <div
+        id="s3-month"
+        class="scene clip"
+        data-composition-id="s3-month"
+        data-composition-src="compositions/s3-month.html"
+        data-start="2.947"
+        data-duration="3.903"
+        data-track-index="1"
+        data-width="1080"
+        data-height="1080"
+      ></div>
+      <div
+        id="s5-card"
+        class="scene clip"
+        data-composition-id="s5-card"
+        data-composition-src="compositions/s5-card.html"
+        data-start="6.85"
+        data-duration="3.902"
+        data-track-index="1"
+        data-width="1080"
+        data-height="1080"
+      ></div>
+      <div
+        id="s6-strobe"
+        class="scene clip"
+        data-composition-id="s6-strobe"
+        data-composition-src="compositions/s6-strobe.html"
+        data-start="10.752"
+        data-duration="1.952"
+        data-track-index="1"
+        data-width="1080"
+        data-height="1080"
+      ></div>
+      <div
+        id="s7-end"
+        class="scene clip"
+        data-composition-id="s7-end"
+        data-composition-src="compositions/s7-end.html"
+        data-start="12.704"
+        data-duration="2.296"
+        data-track-index="1"
+        data-width="1080"
+        data-height="1080"
+      ></div>
+
+      <div
+        id="fx-motion-blur"
+        class="scene clip"
+        data-composition-id="fx-motion-blur"
+        data-composition-src="compositions/fx-motion-blur.html"
+        data-start="0"
+        data-duration="15"
+        data-track-index="0"
+        data-width="1080"
+        data-height="1080"
+      ></div>
+
+      <!-- ===== chrome ===== -->
+      <div id="chrome">
+        <div class="cross" id="x-tl"></div>
+        <div class="cross" id="x-tr"></div>
+        <div class="cross" id="x-bl"></div>
+        <div class="cross" id="x-br"></div>
+        <div class="meta" id="m-tl">MKT-ENG / 01<span id="m-sub">THE RETAINER</span></div>
+        <div class="meta" id="m-tr">T+00.000S</div>
+        <div id="rail"><div id="rail-fill"></div></div>
+        <div class="meta" id="m-bl">00:00:00:00</div>
+        <div class="meta" id="m-br">
+          <span id="m-bar">BAR 1/8</span>
+          <span id="beats"><i class="on"></i><i></i><i></i><i></i></span>
+          <span>123 BPM</span>
+          <span id="m-frame">F 0000</span>
+        </div>
+      </div>
+
+      <!-- ===== audio ===== -->
+      <hf-audio-group
+        id="mix"
+        data-label="Mix bus"
+        data-volume="1"
+        data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;truepeak&quot;,&quot;id&quot;:&quot;n1&quot;,&quot;label&quot;:&quot;Delivery ceiling&quot;,&quot;params&quot;:{&quot;ceiling&quot;:-1.5}}]}"
+      ></hf-audio-group>
+      <audio
+        id="music"
+        src="assets/music/dub-techno-groove-15s.wav"
+        data-audio-group="mix"
+        data-start="0"
+        data-duration="15"
+        data-track-index="10"
+        data-volume="0.9"
+        data-automation="{&quot;version&quot;:1,&quot;lanes&quot;:[{&quot;target&quot;:&quot;volume&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:1},{&quot;t&quot;:14.6,&quot;v&quot;:1},{&quot;t&quot;:15,&quot;v&quot;:0}]}]}"
+      ></audio>
+      <audio id="sfx-tick-roll" src="assets/sfx/click-soft.mp3" data-audio-group="mix" data-start="0.98" data-duration="0.37" data-track-index="11" data-volume="0.3"></audio>
+      <audio id="sfx-thud-strike" src="assets/sfx/impact-bass-1.mp3" data-audio-group="mix" data-start="1.47" data-duration="1.4" data-track-index="12" data-volume="0.2"></audio>
+      <audio id="sfx-whoosh-rent" src="assets/sfx/whoosh.mp3" data-audio-group="mix" data-start="1.93" data-duration="0.57" data-track-index="13" data-volume="0.3"></audio>
+      <audio id="sfx-whoosh-month" src="assets/sfx/whoosh-short.mp3" data-audio-group="mix" data-start="2.92" data-duration="0.57" data-track-index="11" data-volume="0.2"></audio>
+      <audio id="sfx-pop-a" src="assets/sfx/pop.mp3" data-audio-group="mix" data-start="4.41" data-duration="0.5" data-track-index="12" data-volume="0.3"></audio>
+      <audio id="sfx-pop-b" src="assets/sfx/pop.mp3" data-audio-group="mix" data-start="4.898" data-duration="0.5" data-track-index="13" data-volume="0.3"></audio>
+      <audio id="sfx-tick-stat" src="assets/sfx/click-soft.mp3" data-audio-group="mix" data-start="5.70" data-duration="0.37" data-track-index="11" data-volume="0.25"></audio>
+      <audio id="sfx-whoosh-sweep" src="assets/sfx/whoosh.mp3" data-audio-group="mix" data-start="5.84" data-duration="0.57" data-track-index="12" data-volume="0.28"></audio>
+      <audio id="sfx-whoosh-card" src="assets/sfx/whoosh-short.mp3" data-audio-group="mix" data-start="6.83" data-duration="0.57" data-track-index="13" data-volume="0.18"></audio>
+      <audio id="sfx-click-1" src="assets/sfx/click.mp3" data-audio-group="mix" data-start="7.337" data-duration="0.37" data-track-index="11" data-volume="0.35"></audio>
+      <audio id="sfx-click-2" src="assets/sfx/click.mp3" data-audio-group="mix" data-start="8.313" data-duration="0.37" data-track-index="12" data-volume="0.35"></audio>
+      <audio id="sfx-click-3" src="assets/sfx/click.mp3" data-audio-group="mix" data-start="9.289" data-duration="0.37" data-track-index="13" data-volume="0.35"></audio>
+      <audio id="sfx-click-4" src="assets/sfx/click.mp3" data-audio-group="mix" data-start="10.264" data-duration="0.37" data-track-index="11" data-volume="0.35"></audio>
+      <audio id="sfx-whoosh-strobe" src="assets/sfx/whoosh-short.mp3" data-audio-group="mix" data-start="10.73" data-duration="0.57" data-track-index="12" data-volume="0.2"></audio>
+      <audio id="sfx-x-1" src="assets/sfx/key-press.mp3" data-audio-group="mix" data-start="10.996" data-duration="0.4" data-track-index="13" data-volume="0.7"></audio>
+      <audio id="sfx-x-2" src="assets/sfx/key-press.mp3" data-audio-group="mix" data-start="11.484" data-duration="0.4" data-track-index="11" data-volume="0.7"></audio>
+      <audio id="sfx-x-3" src="assets/sfx/key-press.mp3" data-audio-group="mix" data-start="11.972" data-duration="0.4" data-track-index="12" data-volume="0.7"></audio>
+      <audio id="sfx-thud-engineer" src="assets/sfx/impact-bass-1.mp3" data-audio-group="mix" data-start="12.20" data-duration="1.4" data-track-index="13" data-volume="0.2"></audio>
+      <audio id="sfx-whoosh-end" src="assets/sfx/whoosh.mp3" data-audio-group="mix" data-start="12.67" data-duration="0.57" data-track-index="11" data-volume="0.22"></audio>
+      <audio id="sfx-whoosh-loop" src="assets/sfx/whoosh-short.mp3" data-audio-group="mix" data-start="14.68" data-duration="0.32" data-track-index="12" data-volume="0.14"></audio>
+    </div>
+
+    <script>
+      (function () {
+        const FPS = 60;
+        const T0 = 0.02;
+        const BEAT = 1.951333 / 4;
+        const DUR = 15;
+
+        // chapter + chrome palette per time window (global seconds)
+        // field: what colour the scene paints behind the chrome
+        const WINDOWS = [
+          { at: 0, sub: "THE RETAINER", field: "paper" },
+          { at: 1.971, sub: "THE RETAINER", field: "verm" },
+          { at: 2.947, sub: "THE MONTH", field: "paper" },
+          { at: 6.85, sub: "THE WEEK", field: "paper" },
+          { at: 10.752, sub: "OPTION A", field: "ink" },
+          { at: 11.24, sub: "OPTION B", field: "paper" },
+          { at: 11.728, sub: "OPTION C", field: "verm" },
+          { at: 12.216, sub: "THE ANSWER", field: "cobalt" },
+          { at: 12.704, sub: "THE ANSWER", field: "paper" },
+          { at: 14.7, sub: "THE RETAINER", field: "paper" },
+        ];
+        const PALETTE = {
+          paper: { c: "#6e6a62", strong: "#1a1a1a", line: "rgba(26,26,26,0.16)", fill: "#1a1a1a" },
+          verm: { c: "#121212", strong: "#121212", line: "rgba(18,18,18,0.3)", fill: "#121212" },
+          ink: { c: "#a8a399", strong: "#f2f0eb", line: "rgba(242,240,235,0.22)", fill: "#f2f0eb" },
+          cobalt: { c: "#ffffff", strong: "#ffffff", line: "rgba(255,255,255,0.35)", fill: "#ffffff" },
+        };
+
+        const chrome = document.getElementById("chrome");
+        const mSub = document.getElementById("m-sub");
+        const mTr = document.getElementById("m-tr");
+        const mBl = document.getElementById("m-bl");
+        const mBar = document.getElementById("m-bar");
+        const mFrame = document.getElementById("m-frame");
+        const beatEls = Array.from(document.querySelectorAll("#beats i"));
+        const railFill = document.getElementById("rail-fill");
+        const pad = (n, w) => String(n).padStart(w, "0");
+
+        let lastKey = "";
+        function paint(t) {
+          let w = WINDOWS[0];
+          for (const x of WINDOWS) if (t >= x.at - 1e-6) w = x;
+          const key = w.sub + w.field;
+          if (key !== lastKey) {
+            const p = PALETTE[w.field];
+            chrome.style.setProperty("--chrome-c", p.c);
+            chrome.style.setProperty("--chrome-strong", p.strong);
+            chrome.style.setProperty("--chrome-line", p.line);
+            chrome.style.setProperty("--chrome-fill", p.fill);
+            mSub.textContent = w.sub;
+            lastKey = key;
+          }
+          const f = Math.round(t * FPS);
+          const secs = Math.floor(f / FPS);
+          mTr.textContent = "T+" + pad(Math.floor(t), 2) + "." + pad(Math.floor((t % 1) * 1000 + 1e-6), 3) + "S";
+          mBl.textContent = "00:00:" + pad(secs, 2) + ":" + pad(f % FPS, 2);
+          mFrame.textContent = "F " + pad(f, 4);
+          const k = Math.max(0, Math.floor((t - T0 + 0.004) / BEAT));
+          const bi = k % 4;
+          for (let i = 0; i < 4; i++) beatEls[i].classList.toggle("on", i === bi);
+          mBar.textContent = "BAR " + (Math.floor(k / 4) % 8 + 1) + "/8";
+          // progress rail: fills over 0..14.7, rewinds to 0 for the loop seam
+          let prog;
+          if (t < 14.7) prog = t / 14.7;
+          else {
+            const u = Math.min(1, (t - 14.7) / 0.3);
+            prog = 1 - (1 - Math.pow(1 - u, 3));
+          }
+          railFill.style.transform = "scaleX(" + prog.toFixed(4) + ")";
+        }
+
+        const tl = gsap.timeline({ paused: true });
+        const clock = { v: 0 };
+        tl.to(
+          clock,
+          {
+            v: 1,
+            duration: DUR,
+            ease: "none",
+            onUpdate: () => paint(tl.time()),
+          },
+          0,
+        );
+        paint(0);
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,538 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Inter Tight";
+          src: url("../assets/fonts/InterTight-Var.woff2") format("woff2");
+          font-weight: 100 900;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+          font-weight: 400;
+        }
+        @font-face {
+          font-family: "JB Mono";
+          src: url("../assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+          font-weight: 700;
+        }
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f2f0eb;
+          color: #121212;
+          font-family: "Inter Tight", sans-serif;
+        }
+        .s3-mono {
+          font-family: "JB Mono", monospace;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          white-space: nowrap;
+          line-height: 1;
+        }
+        #s3-head,
+        #s3-new {
+          position: absolute;
+          left: 84px;
+          top: 108px;
+          font-size: 80px;
+          font-weight: 750;
+          letter-spacing: -0.04em;
+          line-height: 0.98;
+          white-space: nowrap;
+        }
+        #s3-head .ln {
+          display: block;
+        }
+        #s3-head .w {
+          display: inline-block;
+          margin-right: 0.2em;
+        }
+        #s3-new {
+          color: #2b4bff;
+          opacity: 0;
+        }
+        #s3-days {
+          position: absolute;
+          left: 84px;
+          top: 318px;
+          width: 912px;
+          height: 14px;
+        }
+        #s3-days span {
+          position: absolute;
+          top: 0;
+          width: 120px;
+          text-align: left;
+          padding-left: 2px;
+          font-size: 13px;
+          color: #6e6a62;
+        }
+        #s3-grid {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1080px;
+          height: 1080px;
+        }
+        .s3-cell {
+          position: absolute;
+          width: 120px;
+          height: 74px;
+          will-change: transform;
+        }
+        .s3-face {
+          position: absolute;
+          inset: 0;
+          border-radius: 10px;
+        }
+        .s3-face.M { background: #e1ddd4; }
+        .s3-face.W {
+          background-color: #ebe8e1;
+          background-image: repeating-linear-gradient(135deg, #d3cec3 0 2px, transparent 2px 9px);
+        }
+        .s3-face.R {
+          background: transparent;
+          border: 1.5px dashed #b4afa4;
+        }
+        .s3-face.P { background: #e8e5de; }
+        .s3-face.S,
+        .s3-face.B { background: #2b4bff; }
+        .s3-face.B { opacity: 0; }
+        .s3-num {
+          position: absolute;
+          left: 10px;
+          top: 9px;
+          font-size: 13px;
+          color: #4f4b45;
+        }
+        .s3-lab {
+          position: absolute;
+          left: 10px;
+          bottom: 9px;
+          font-size: 11px;
+          letter-spacing: 0.08em;
+          color: #3a3732;
+        }
+        .s3-face.S .s3-num,
+        .s3-face.S .s3-lab,
+        .s3-face.B .s3-num,
+        .s3-face.B .s3-lab {
+          color: #ffffff;
+        }
+        .s3-dots {
+          position: absolute;
+          right: 10px;
+          top: 6px;
+          font-size: 16px;
+          letter-spacing: 0.1em;
+          color: #55514a;
+        }
+
+        /* callouts */
+        .s3-pill {
+          position: absolute;
+          height: 34px;
+          padding: 0 14px;
+          border-radius: 17px;
+          background: #121212;
+          color: #f2f0eb;
+          font-size: 14px;
+          letter-spacing: 0.1em;
+          display: flex;
+          align-items: center;
+          will-change: transform;
+        }
+        .s3-lead {
+          position: absolute;
+          width: 2px;
+          background: #121212;
+          transform-origin: top center;
+        }
+        .s3-dot {
+          position: absolute;
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: #121212;
+        }
+
+        /* sweep */
+        #s3-bar {
+          position: absolute;
+          left: 0;
+          top: 300px;
+          width: 3px;
+          height: 474px;
+          background: #2b4bff;
+          opacity: 0;
+          will-change: transform;
+        }
+        #s3-bar-tag {
+          position: absolute;
+          left: -2px;
+          top: -30px;
+          height: 26px;
+          padding: 0 10px;
+          border-radius: 4px;
+          background: #2b4bff;
+          color: #ffffff;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+        }
+
+        /* stat */
+        #s3-stat-lab {
+          position: absolute;
+          right: 84px;
+          top: 792px;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          font-size: 15px;
+          color: #121212;
+        }
+        #s3-illu {
+          height: 24px;
+          padding: 0 8px;
+          border: 1.5px solid #6e6a62;
+          border-radius: 12px;
+          color: #6e6a62;
+          font-size: 11px;
+          display: flex;
+          align-items: center;
+        }
+        #s3-stat {
+          position: absolute;
+          right: 78px;
+          top: 820px;
+          height: 150px;
+          display: flex;
+          font-size: 150px;
+          font-weight: 800;
+          letter-spacing: -0.05em;
+          line-height: 150px;
+          color: #121212;
+          font-variant-numeric: tabular-nums;
+        }
+        .s3-col {
+          position: relative;
+          display: block;
+          width: 0.6em;
+          height: 150px;
+          overflow: hidden;
+        }
+        .s3-strip {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          display: block;
+          will-change: transform;
+        }
+        .s3-strip b {
+          display: block;
+          height: 150px;
+          line-height: 150px;
+          text-align: center;
+          font-weight: 800;
+        }
+        #s3-cap {
+          position: absolute;
+          left: 84px;
+          top: 930px;
+          font-size: 15px;
+          color: #6e6a62;
+        }
+      </style>
+
+      <div id="root" data-composition-id="s3-month" data-width="1080" data-height="1080">
+        <svg width="0" height="0" style="position: absolute">
+          <defs>
+            <filter id="s3-vb0" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s3-vbg0" stdDeviation="0 0" /></filter>
+            <filter id="s3-vb1" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur id="s3-vbg1" stdDeviation="0 0" /></filter>
+          </defs>
+        </svg>
+
+        <div id="s3-head">
+          <span class="ln"><span class="w">Most</span><span class="w">marketing</span><span class="w">spend</span></span>
+          <span class="ln"><span class="w">buys</span><span class="w">hours.</span></span>
+        </div>
+        <div id="s3-new">Not anymore.</div>
+
+        <div id="s3-days" class="s3-mono"></div>
+        <div id="s3-grid"></div>
+
+        <div class="s3-lead" id="s3-lead-a"></div>
+        <div class="s3-dot" id="s3-dot-a"></div>
+        <div class="s3-pill s3-mono" id="s3-pill-a">WAITING ON FEEDBACK</div>
+        <div class="s3-lead" id="s3-lead-b"></div>
+        <div class="s3-dot" id="s3-dot-b"></div>
+        <div class="s3-pill s3-mono" id="s3-pill-b">ANOTHER STATUS CALL</div>
+
+        <div id="s3-bar"><div id="s3-bar-tag" class="s3-mono">AI + 1 HUMAN</div></div>
+
+        <div id="s3-stat-lab" class="s3-mono"><span id="s3-illu">ILLUSTRATIVE</span><span>SHIPPED · THIS MONTH</span></div>
+        <div id="s3-stat">
+          <span class="s3-col" id="s3-c0"><span class="s3-strip" data-layout-allow-overflow id="s3-s0"></span></span>
+          <span class="s3-col" id="s3-c1"><span class="s3-strip" data-layout-allow-overflow id="s3-s1"></span></span>
+          <span>%</span>
+        </div>
+        <div id="s3-cap" class="s3-mono">ONE MONTH · ONE SQUARE = ONE DAY</div>
+      </div>
+
+      <script>
+        (function () {
+          const spring = (z, k) => {
+            if (z >= 0.999) return (p) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 - Math.exp(-k * p) * (1 + k * p));
+            const wd = k * Math.sqrt(1 - z * z);
+            return (p) => {
+              if (p <= 0) return 0;
+              if (p >= 1) return 1;
+              return 1 - Math.exp(-z * k * p) * (Math.cos(wd * p) + ((z * k) / wd) * Math.sin(wd * p));
+            };
+          };
+          const SPR = spring(0.78, 11);
+          const BEAT = 1.951333 / 4;
+          const b = (k) => k * BEAT; // local beat k (scene starts on global beat 6)
+
+          // ---------- layout constants ----------
+          const GX = 84, GY = 344, CW = 120, CH = 74, GAPX = 12, GAPY = 10;
+          const slotXY = (slot) => ({ x: GX + (slot % 7) * (CW + GAPX), y: GY + Math.floor(slot / 7) * (CH + GAPY) });
+          const OFFSET = 2; // month starts on a Wednesday
+
+          // weekday header
+          const days = document.getElementById("s3-days");
+          "M T W T F S S".split(" ").forEach((d, i) => {
+            const s = document.createElement("span");
+            s.textContent = d;
+            s.style.left = i * (CW + GAPX) + "px";
+            days.appendChild(s);
+          });
+
+          // ---------- the month ----------
+          // M meeting · W waiting · R revisions · P report · S shipped (accent)
+          const MONTH = [
+            ["M", "KICKOFF"], ["W", "WAITING"], ["P", "REPORT"], ["S", "SHIPPED"], ["R", "REVISIONS"],
+            ["M", "STATUS CALL"], ["W", "WAITING"], ["W", "WAITING"], ["M", "MEETING"], ["R", "REVISIONS"],
+            ["S", "SHIPPED"], ["P", "REPORT"], ["M", "STATUS CALL"], ["W", "WAITING"], ["R", "REVISIONS"],
+            ["M", "MEETING"], ["S", "SHIPPED"], ["W", "WAITING"], ["P", "REPORT"], ["R", "REVISIONS"],
+            ["M", "STATUS CALL"], ["S", "SHIPPED"], ["W", "WAITING"], ["M", "MEETING"], ["R", "REVISIONS"],
+            ["P", "REPORT"], ["S", "SHIPPED"], ["W", "WAITING"], ["M", "STATUS CALL"], ["P", "INVOICE"],
+          ];
+          const AFTER = ["PAGE", "ADS", "EMAILS", "CRM", "SEO", "COPY", "A/B TEST", "VIDEO", "LANDING", "AUDIT"];
+          const KEEP_GREY = { 9: "REVIEW", 24: "REVIEW" }; // the human's two review days stay grey
+          const HERO_DAY = 15; // becomes the card in the next scene
+
+          const grid = document.getElementById("s3-grid");
+          const cells = [];
+          let ai = 0;
+          MONTH.forEach(([type, label], i) => {
+            const day = i + 1;
+            const { x, y } = slotXY(i + OFFSET);
+            const c = document.createElement("div");
+            c.className = "s3-cell";
+            c.id = "s3-cell-" + day;
+            c.style.left = x + "px";
+            c.style.top = y + "px";
+            const greyType = type === "S" ? "M" : type;
+            const dots = type === "P" ? '<span class="s3-dots">···</span>' : "";
+            let afterLab = AFTER[ai % AFTER.length];
+            if (type !== "S" && !KEEP_GREY[day]) ai++;
+            if (day === HERO_DAY) afterLab = "PAGE";
+            c.innerHTML =
+              '<div class="s3-face ' + greyType + '"><span class="s3-num s3-mono">' + String(day).padStart(2, "0") +
+              '</span><span class="s3-lab s3-mono">' + (type === "S" ? "MEETING" : label) + "</span>" + dots + "</div>" +
+              '<div class="s3-face B" id="s3-b-' + day + '"><span class="s3-num s3-mono">' + String(day).padStart(2, "0") +
+              '</span><span class="s3-lab s3-mono" id="s3-bl-' + day + '">' + (type === "S" ? "SHIPPED" : afterLab) + "</span></div>";
+            grid.appendChild(c);
+            cells.push({ el: c, day, type, x, y, keep: !!KEEP_GREY[day] });
+          });
+          // review days keep a grey face with an explicit label
+          Object.keys(KEEP_GREY).forEach((d) => {
+            const lab = document.querySelector("#s3-cell-" + d + " .s3-face:not(.B) .s3-lab");
+            lab.textContent = KEEP_GREY[d];
+          });
+
+          // ---------- callouts ----------
+          function placeCallout(key, pillX, pillY, pillW, targetDay, fromAbove) {
+            const t = cells[targetDay - 1];
+            const cx = t.x + CW / 2;
+            const pill = document.getElementById("s3-pill-" + key);
+            pill.style.left = pillX + "px";
+            pill.style.top = pillY + "px";
+            const lead = document.getElementById("s3-lead-" + key);
+            const dot = document.getElementById("s3-dot-" + key);
+            const y0 = fromAbove ? pillY + 34 : t.y + CH / 2;
+            const y1 = fromAbove ? t.y + CH / 2 : pillY;
+            lead.style.left = cx - 1 + "px";
+            lead.style.top = y0 + "px";
+            lead.style.height = y1 - y0 + "px";
+            dot.style.left = cx - 4.5 + "px";
+            dot.style.top = t.y + CH / 2 - 4.5 + "px";
+            return { pill, lead, dot, fromAbove };
+          }
+          const callA = placeCallout("a", 150, 278, 0, 7, true);
+          const callB = placeCallout("b", 262, 770, 0, 29, false);
+
+          // ---------- stat roller (0 -> 18 -> 92) ----------
+          const LINE = 150;
+          const strips = [0, 1].map((i) => document.getElementById("s3-s" + i));
+          const blurs = [0, 1].map((i) => document.getElementById("s3-vbg" + i));
+          let h0 = "", h1 = "";
+          for (let d = 0; d <= 10; d++) h0 += "<b>" + (d % 10) + "</b>";
+          for (let d = 0; d <= 100; d++) h1 += "<b>" + (d % 10) + "</b>";
+          strips[0].innerHTML = h0;
+          strips[1].innerHTML = h1;
+          [0, 1].forEach((i) => (document.getElementById("s3-c" + i).style.filter = "url(#s3-vb" + i + ")"));
+
+          const ROLL1 = { a: b(4), d: 0.5, from: 0, to: 18 };
+          const SWEEP_A = b(6), SWEEP_D = 0.7;
+          const ROLL2 = { a: SWEEP_A + 0.04, d: 0.74, from: 18, to: 92 };
+          const rollE = spring(1.0, 12); // critically damped: digits never overshoot into the next slot
+          function statVal(t) {
+            if (t < ROLL1.a) return 0;
+            if (t < ROLL2.a) return ROLL1.from + (ROLL1.to - ROLL1.from) * rollE((t - ROLL1.a) / ROLL1.d);
+            return ROLL2.from + (ROLL2.to - ROLL2.from) * rollE((t - ROLL2.a) / ROLL2.d);
+          }
+          function paintStat(t) {
+            const v = statVal(t);
+            const vel = (statVal(t + 1 / 120) - statVal(t - 1 / 120)) * 60;
+            const ones = v % 10;
+            const carry = Math.max(0, ones - 9); // odometer: tens only move while ones roll 9 -> 0
+            const pos = [Math.floor(v / 10) + carry, v];
+            const vels = [carry > 0 ? vel : 0, vel];
+            for (let i = 0; i < 2; i++) {
+              strips[i].style.transform = "translateY(" + (-pos[i] * LINE).toFixed(2) + "px)";
+              const bl = Math.min(18, Math.abs(vels[i]) * LINE * (1 / 60) * 0.45);
+              blurs[i].setAttribute("stdDeviation", "0 " + (bl < 0.15 ? 0 : bl.toFixed(2)));
+            }
+          }
+
+          // ---------- timeline ----------
+          const tl = gsap.timeline({ paused: true });
+
+          // headline: per-word lift through blur
+          tl.fromTo(
+            "#s3-head .w",
+            { opacity: 0.15, y: 22, filter: "blur(7px)" },
+            { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.22, ease: "power3.out", stagger: 0.028 },
+            0,
+          );
+
+          // the month assembles on a diagonal wave
+          cells.forEach((c) => {
+            const col = (c.day - 1 + OFFSET) % 7;
+            const row = Math.floor((c.day - 1 + OFFSET) / 7);
+            tl.fromTo(
+              c.el,
+              { opacity: 0, scale: 0.7, y: 14 },
+              { opacity: 1, scale: 1, y: 0, duration: 0.42, ease: SPR },
+              0.02 + (col + row) * 0.035,
+            );
+          });
+          tl.fromTo("#s3-days", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, b(1));
+          tl.fromTo("#s3-cap", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.3, ease: "expo.out" }, b(1));
+
+          // the few days that actually shipped flip to accent on 8th notes
+          const accent = cells.filter((c) => c.type === "S");
+          accent.forEach((c, i) => {
+            const at = b(2) + i * (BEAT / 2);
+            tl.fromTo("#s3-b-" + c.day, { opacity: 0 }, { opacity: 1, duration: 0.06, ease: "none" }, at);
+            tl.set(c.el.querySelector(".s3-face"), { opacity: 0 }, at + 0.07);
+            tl.fromTo(c.el, { scale: 0.9 }, { scale: 1, duration: 0.3, ease: SPR, immediateRender: false }, at);
+          });
+
+          // callouts spring in on beats 2 and 3
+          [callA, callB].forEach((c, i) => {
+            const at = b(2 + i);
+            tl.fromTo(c.dot, { scale: 0 }, { scale: 1, duration: 0.2, ease: SPR }, at);
+            tl.fromTo(
+              c.lead,
+              { scaleY: 0, transformOrigin: c.fromAbove ? "bottom center" : "top center" },
+              { scaleY: 1, duration: 0.18, ease: "expo.out" },
+              at + 0.02,
+            );
+            tl.fromTo(
+              c.pill,
+              { opacity: 0, scale: 0.6, y: c.fromAbove ? 10 : -10 },
+              { opacity: 1, scale: 1, y: 0, duration: 0.36, ease: SPR },
+              at + 0.06,
+            );
+          });
+
+          // the stat lands on beat 4
+          tl.fromTo("#s3-stat-lab", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.25, ease: "power3.out" }, b(4) - 0.06);
+          tl.fromTo("#s3-stat", { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "none" }, b(4));
+          const drv = { v: 0 };
+          tl.to(drv, { v: 1, duration: 3.903, ease: "none", onUpdate: () => paintStat(tl.time()) }, 0);
+          paintStat(0);
+
+          // beat 5: the month exhales (grey days sink)
+          const greyEls = cells.filter((c) => c.type !== "S").map((c) => c.el.querySelector(".s3-face"));
+          tl.to(greyEls, { opacity: 0.8, duration: 0.3, ease: "sine.inOut" }, b(5));
+
+          // ---------- beat 6 (downbeat): Not anymore. ----------
+          tl.to("#s3-head", { opacity: 0, y: -22, filter: "blur(8px)", duration: 0.15, ease: "power2.in" }, SWEEP_A - 0.02);
+          tl.fromTo(
+            "#s3-new",
+            { opacity: 0, y: 26, filter: "blur(10px)" },
+            { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" },
+            SWEEP_A + 0.13,
+          );
+          [callA, callB].forEach((c) => tl.to([c.pill, c.lead, c.dot], { opacity: 0, duration: 0.12, ease: "power1.in" }, SWEEP_A));
+          tl.to("#s3-stat", { color: "#2b4bff", duration: 0.3, ease: "power1.out" }, SWEEP_A + 0.1);
+
+          // sweep bar crosses the grid; each day flips as the bar passes its centre
+          const X0 = 60, X1 = 1020;
+          const sweepE = gsap.parseEase("power2.inOut");
+          tl.fromTo("#s3-bar", { opacity: 0 }, { opacity: 1, duration: 0.05 }, SWEEP_A);
+          tl.fromTo("#s3-bar", { x: X0 }, { x: X1, duration: SWEEP_D, ease: "power2.inOut" }, SWEEP_A);
+          // the tag slides from the right of the bar to its left so it never leaves the frame
+          tl.fromTo("#s3-bar-tag", { x: 0 }, { x: -112, duration: SWEEP_D, ease: "power2.inOut" }, SWEEP_A);
+          tl.to("#s3-bar", { opacity: 0, duration: 0.1 }, SWEEP_A + SWEEP_D - 0.06);
+          const passTime = (x) => {
+            const target = (x - X0) / (X1 - X0);
+            let lo = 0, hi = 1;
+            for (let k = 0; k < 30; k++) {
+              const m = (lo + hi) / 2;
+              if (sweepE(m) < target) lo = m;
+              else hi = m;
+            }
+            return SWEEP_A + lo * SWEEP_D;
+          };
+          cells.forEach((c) => {
+            if (c.type === "S" || c.keep) return;
+            const at = passTime(c.x + CW / 2);
+            tl.fromTo("#s3-b-" + c.day, { opacity: 0 }, { opacity: 1, duration: 0.05, ease: "none" }, at);
+            tl.set(c.el.querySelector(".s3-face"), { opacity: 0 }, at + 0.06);
+            tl.fromTo(c.el, { scale: 0.88 }, { scale: 1, duration: 0.32, ease: SPR, immediateRender: false }, at);
+          });
+
+          // ---------- exit: every day collapses except the hero day, which becomes the card ----------
+          const EXIT = b(7) + 0.27; // ~3.66
+          const hero = cells[HERO_DAY - 1];
+          const hx = hero.x + CW / 2, hy = hero.y + CH / 2;
+          cells.forEach((c) => {
+            if (c === hero) return;
+            const d = Math.hypot(c.x - hero.x, c.y - hero.y) / 900;
+            tl.to(c.el, { scale: 0, opacity: 0, duration: 0.16, ease: "power2.in" }, EXIT - 0.06 + d * 0.12);
+          });
+          tl.to(["#s3-new", "#s3-stat", "#s3-stat-lab", "#s3-cap", "#s3-days"], { opacity: 0, y: -10, duration: 0.14, ease: "power2.in" }, EXIT - 0.04);
+          tl.to("#s3-bl-" + HERO_DAY, { opacity: 0, duration: 0.08 }, EXIT);
+          tl.to(document.querySelector("#s3-b-" + HERO_DAY + " .s3-num"), { opacity: 0, duration: 0.08 }, EXIT);
+          tl.to(hero.el, { x: 540 - hx, y: 520 - hy, scale: 1.5, duration: 3.903 - EXIT, ease: "power3.inOut" }, EXIT);
+
+          window.__timelines["s3-month"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

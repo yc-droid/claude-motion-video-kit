@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Montserrat";
+          src: url("../assets/fonts/Montserrat-Var.ttf") format("truetype");
+          font-weight: 100 900;
+        }
+        #b7-rings-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #111113;
+        }
+        #b7-cv {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+      <div id="b7-rings-root" data-composition-id="b7-rings" data-width="1920" data-height="1080">
+        <canvas id="b7-cv" width="1920" height="1080"></canvas>
+      </div>
+      <script>
+        (function () {
+          const W = 1920, H = 1080, CX = 960, CY = 540;
+          const B = 60 / 128, DUR = 1.875;
+          const INK = "#111113", PAPER = "#EEEAE3", RED = "#E9432F";
+          const cv = document.getElementById("b7-cv");
+          const ctx = cv.getContext("2d");
+          const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+          const acc = mk(), tmp = mk();
+          const actx = acc.getContext("2d"), tctx = tmp.getContext("2d");
+          const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+          const lerp = (a, b, u) => a + (b - a) * u;
+          const prog = (t, a, d) => clamp((t - a) / d);
+          const inOutCubic = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+          const inExpo = (u) => (u <= 0 ? 0 : Math.pow(2, 10 * (u - 1)));
+          const outCubic = (u) => 1 - Math.pow(1 - u, 3);
+          function spring(tau, f = 3.2, z = 0.8) {
+            if (tau <= 0) return 0;
+            const w = 2 * Math.PI * f, wd = w * Math.sqrt(1 - z * z);
+            return 1 - Math.exp(-z * w * tau) * (Math.cos(wd * tau) + ((z * w) / wd) * Math.sin(wd * tau));
+          }
+
+          const WORDS = ["ADS", "LANDING PAGES", "EMAIL", "CRM", "SEO", "VOICE"];
+          const ROWS = [
+            { fs: 46, wt: 800, outline: false, R: 410, yFlat: 312, dir: 1, v: 300, rot: 0 },
+            { fs: 38, wt: 800, outline: true, R: 340, yFlat: 412, dir: -1, v: 260, rot: 1 },
+            { fs: 32, wt: 800, outline: false, R: 278, yFlat: 498, dir: 1, v: 230, rot: 2 },
+            { fs: 27, wt: 800, outline: true, R: 224, yFlat: 572, dir: -1, v: 200, rot: 3 },
+          ];
+          // build each row as glyph runs that tile exactly one ring circumference
+          function buildRows(g) {
+            for (const row of ROWS) {
+              g.font = row.wt + " " + row.fs + "px Montserrat";
+              const words = WORDS.slice(row.rot).concat(WORDS.slice(0, row.rot));
+              const glyphs = [];
+              const track = row.fs * 0.32;
+              const dotGap = row.fs * 1.3;
+              let s = 0;
+              for (const w of words) {
+                for (const ch of w) {
+                  const cw = g.measureText(ch).width;
+                  glyphs.push({ ch, s: s + cw / 2, cw });
+                  s += cw + track;
+                }
+                s += dotGap * 0.5;
+                glyphs.push({ dot: true, s, cw: 0 });
+                s += dotGap * 0.5;
+              }
+              const C = 2 * Math.PI * row.R;
+              const reps = Math.max(1, Math.round(C / s));
+              const k = C / (s * reps); // stretch spacing so the run closes the ring exactly
+              row.glyphs = [];
+              for (let r = 0; r < reps; r++) for (const gl of glyphs) row.glyphs.push({ ...gl, s: (gl.s + r * s) * k });
+              row.C = C;
+            }
+          }
+
+          function bend(t) { return inOutCubic(prog(t, 0.5, 0.62)); }
+
+          function draw(g, t) {
+            g.clearRect(0, 0, W, H);
+            const u = bend(t);
+            const spin = inExpo(prog(t, 1.38, 0.42));
+            const shrink = 1 - 0.55 * inExpo(prog(t, 1.5, 0.36));
+            ROWS.forEach((row, ri) => {
+              const enter = outCubic(prog(t, 0.0 + ri * 0.03, 0.16));
+              // scroll offset in px of arc length; spins up at the end
+              const off = row.dir * (row.v * t + 2600 * spin * (0.6 + 0.2 * ri) * (t - 1.38 > 0 ? (t - 1.38) : 0) * 2) + row.dir * (1 - enter) * -600;
+              const R = row.R * shrink;
+              const kap = Math.max(1e-5, u / R);
+              const yTop = lerp(row.yFlat, CY - R, u);
+              const cy = yTop + 1 / kap;
+              const half = Math.min(Math.PI / kap, 1300);
+              g.font = row.wt + " " + Math.round(row.fs * lerp(1, shrink, 1)) + "px Montserrat";
+              g.textAlign = "center"; g.textBaseline = "middle";
+              g.fillStyle = PAPER; g.strokeStyle = PAPER; g.lineWidth = 1.4;
+              const C = row.C * shrink;
+              for (const gl of row.glyphs) {
+                let s = ((gl.s * shrink + off) % C + C) % C;
+                // draw every tile copy that falls within the visible arc
+                for (let base = -Math.ceil(half / C) * C; base <= half; base += C) {
+                  const sc = s + base;
+                  if (sc < -half || sc > half) continue;
+                  const th = sc * kap;
+                  const x = CX + Math.sin(th) / kap;
+                  const y = cy - Math.cos(th) / kap;
+                  if (x < -80 || x > W + 80) continue;
+                  g.save();
+                  g.translate(x, y);
+                  g.rotate(th);
+                  if (gl.dot) {
+                    g.fillStyle = RED;
+                    g.beginPath(); g.arc(0, 0, row.fs * 0.11 * shrink, 0, Math.PI * 2); g.fill();
+                    g.fillStyle = PAPER;
+                  } else if (row.outline) g.strokeText(gl.ch, 0, 0);
+                  else g.fillText(gl.ch, 0, 0);
+                  g.restore();
+                }
+              }
+            });
+            // the human at the centre of every ring
+            const dr = 16 * clamp(spring(t - 0.62, 3.6, 0.78), 0, 1.2);
+            // cream iris opens from the dot on the way out
+            const iris = inExpo(prog(t, 1.7, 0.175));
+            if (iris > 0) {
+              g.fillStyle = PAPER;
+              g.beginPath(); g.arc(CX, CY, iris * 1150, 0, Math.PI * 2); g.fill();
+            }
+            if (dr > 0) {
+              g.fillStyle = RED;
+              g.beginPath(); g.arc(CX, CY, Math.max(0, dr), 0, Math.PI * 2); g.fill();
+            }
+          }
+
+          const N = 8, SHUT = 1 / 50;
+          function render(t) {
+            ctx.fillStyle = INK;
+            ctx.fillRect(0, 0, W, H);
+            actx.globalCompositeOperation = "source-over";
+            actx.clearRect(0, 0, W, H);
+            for (let i = 0; i < N; i++) {
+              const ts = clamp(t + (i / (N - 1) - 0.5) * SHUT, 0, DUR - 0.0001);
+              draw(tctx, ts);
+              actx.globalCompositeOperation = "lighter";
+              actx.globalAlpha = 1 / N;
+              actx.drawImage(tmp, 0, 0);
+            }
+            actx.globalAlpha = 1;
+            actx.globalCompositeOperation = "source-over";
+            ctx.drawImage(acc, 0, 0);
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          const clock = { v: 0 };
+          tl.to(clock, { v: 1, duration: DUR, ease: "none", onUpdate: () => render(tl.time()) }, 0);
+          document.fonts.load("800 46px Montserrat").then(() => {
+            buildRows(ctx);
+            render(0);
+            window.__timelines["b7-rings"] = tl;
+          });
+        })();
+      </script>
+    </template>
+  </body>
+</html>

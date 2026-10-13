@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Marketing engineering reel</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Barlow";
+        src: url("assets/fonts/Barlow-600.ttf") format("truetype");
+        font-weight: 600;
+      }
+      @font-face {
+        font-family: "Barlow";
+        src: url("assets/fonts/Barlow-700.ttf") format("truetype");
+        font-weight: 700;
+      }
+      @font-face {
+        font-family: "JB Mono";
+        src: url("assets/fonts/JetBrainsMono-400.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "JB Mono";
+        src: url("assets/fonts/JetBrainsMono-700.woff2") format("woff2");
+        font-weight: 700;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #111113;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #111113;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* ---------- grain (seeded, shifts per frame) ---------- */
+      #grain {
+        position: absolute;
+        inset: -64px;
+        z-index: 40;
+        pointer-events: none;
+        opacity: 0.075;
+        mix-blend-mode: overlay;
+        background-repeat: repeat;
+      }
+
+      /* ---------- designer frame ---------- */
+      #chrome {
+        position: absolute;
+        inset: 0;
+        z-index: 50;
+        pointer-events: none;
+        font-family: "Barlow", sans-serif;
+        font-weight: 600;
+        font-size: 17px;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        line-height: 1;
+        white-space: nowrap;
+        --c-strong: #f2efe9;
+        --c-dim: #8a877f;
+        --c-line: #cfcac1;
+      }
+      .crop {
+        position: absolute;
+        width: 31px;
+        height: 31px;
+        border-color: var(--c-line);
+        border-style: solid;
+        border-width: 0;
+      }
+      #crop-tl { left: 55px; top: 55px; border-left-width: 2px; border-top-width: 2px; }
+      #crop-tr { right: 55px; top: 55px; border-right-width: 2px; border-top-width: 2px; }
+      #crop-bl { left: 55px; bottom: 55px; border-left-width: 2px; border-bottom-width: 2px; }
+      #crop-br { right: 55px; bottom: 55px; border-right-width: 2px; border-bottom-width: 2px; }
+      .meta {
+        position: absolute;
+      }
+      #m-tl {
+        left: 86px;
+        top: 74px;
+        color: var(--c-strong);
+        font-weight: 700;
+      }
+      #m-tl span {
+        color: var(--c-dim);
+        font-weight: 600;
+        margin-left: 16px;
+      }
+      #m-tr {
+        right: 86px;
+        top: 74px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        color: var(--c-dim);
+      }
+      #m-tr b {
+        color: var(--c-strong);
+        font-weight: 700;
+      }
+      #beats {
+        display: flex;
+        gap: 6px;
+      }
+      #beats i {
+        display: block;
+        width: 9px;
+        height: 9px;
+        border: 1.5px solid var(--c-dim);
+      }
+      #beats i.on {
+        background: var(--c-strong);
+        border-color: var(--c-strong);
+      }
+      #m-br {
+        right: 86px;
+        bottom: 74px;
+        display: flex;
+        gap: 22px;
+        font-family: "JB Mono", monospace;
+        font-size: 16px;
+        letter-spacing: 0.16em;
+        color: var(--c-dim);
+      }
+      #m-br b {
+        color: var(--c-strong);
+        font-weight: 700;
+      }
+      #m-top {
+        transition: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="15"
+      data-width="1920"
+      data-height="1080"
+      data-fps="60"
+    >
+      <!-- ===== bars: one sub-composition per bar, cut on each downbeat (1 bar = 1.875s @ 128 BPM) ===== -->
+      <div id="b1-agents" class="scene clip" data-composition-id="b1-agents" data-composition-src="compositions/b1-agents.html" data-start="0" data-duration="1.875" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="b2-ship" class="scene clip" data-composition-id="b2-ship" data-composition-src="compositions/b2-ship.html" data-start="1.875" data-duration="1.875" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="b3-morph" class="scene clip" data-composition-id="b3-morph" data-composition-src="compositions/b3-morph.html" data-start="3.75" data-duration="1.875" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="b4-grid" class="scene clip" data-composition-id="b4-grid" data-composition-src="compositions/b4-grid.html" data-start="5.625" data-duration="1.875" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="b5-funnel" class="scene clip" data-composition-id="b5-funnel" data-composition-src="compositions/b5-funnel.html" data-start="7.5" data-duration="1.875" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="b6-ribbon" class="scene clip" data-composition-id="b6-ribbon" data-composition-src="compositions/b6-ribbon.html" data-start="9.375" data-duration="1.875" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="b7-rings" class="scene clip" data-composition-id="b7-rings" data-composition-src="compositions/b7-rings.html" data-start="11.25" data-duration="1.875" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="b8-mark" class="scene clip" data-composition-id="b8-mark" data-composition-src="compositions/b8-mark.html" data-start="13.125" data-duration="1.875" data-track-index="1" data-width="1920" data-height="1080"></div>
+
+      <div id="fx-motion-blur" class="scene clip" data-composition-id="fx-motion-blur" data-composition-src="compositions/fx-motion-blur.html" data-start="0" data-duration="15" data-track-index="0" data-width="1920" data-height="1080"></div>
+
+      <div id="grain"></div>
+
+      <!-- ===== designer frame ===== -->
+      <div id="chrome">
+        <div class="crop" id="crop-tl"></div>
+        <div class="crop" id="crop-tr"></div>
+        <div class="crop" id="crop-bl"></div>
+        <div class="crop" id="crop-br"></div>
+        <div id="m-top">
+          <div class="meta" id="m-tl">MARKETING ENGINEERING<span>REEL 2026</span></div>
+          <div class="meta" id="m-tr">
+            <span id="beats"><i class="on"></i><i></i><i></i><i></i></span>
+            <span id="m-bar">BAR 1/8</span>
+            <b>128 BPM</b>
+          </div>
+        </div>
+        <div class="meta" id="m-br"><span id="m-frame">F0000</span><b id="m-tc">00:00:00:00</b></div>
+      </div>
+
+      <!-- ===== audio ===== -->
+      <hf-audio-group
+        id="mix"
+        data-label="Mix bus"
+        data-volume="1"
+        data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;truepeak&quot;,&quot;id&quot;:&quot;n1&quot;,&quot;label&quot;:&quot;Delivery ceiling&quot;,&quot;params&quot;:{&quot;ceiling&quot;:-1.5}}]}"
+      ></hf-audio-group>
+      <audio
+        id="music"
+        src="assets/music/minimal-techno-02-15s.wav"
+        data-audio-group="mix"
+        data-start="0"
+        data-duration="15"
+        data-track-index="10"
+        data-volume="0.9"
+        data-automation="{&quot;version&quot;:1,&quot;lanes&quot;:[{&quot;target&quot;:&quot;volume&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:1},{&quot;t&quot;:14.985,&quot;v&quot;:1},{&quot;t&quot;:15,&quot;v&quot;:0}]}]}"
+      ></audio>
+      <audio id="sfx-iris" src="assets/sfx/whoosh-short.mp3" data-audio-group="mix" data-start="1.66" data-duration="0.57" data-track-index="11" data-volume="0.22"></audio>
+      <audio id="sfx-snap" src="assets/sfx/click.mp3" data-audio-group="mix" data-start="2.62" data-duration="0.37" data-track-index="12" data-volume="0.45"></audio>
+      <audio id="sfx-push" src="assets/sfx/whoosh.mp3" data-audio-group="mix" data-start="3.40" data-duration="0.57" data-track-index="13" data-volume="0.26"></audio>
+      <audio id="sfx-tick-a" src="assets/sfx/click-soft.mp3" data-audio-group="mix" data-start="4.219" data-duration="0.37" data-track-index="11" data-volume="0.3"></audio>
+      <audio id="sfx-tick-b" src="assets/sfx/click-soft.mp3" data-audio-group="mix" data-start="5.156" data-duration="0.37" data-track-index="12" data-volume="0.3"></audio>
+      <audio id="sfx-cut-5" src="assets/sfx/whoosh-short.mp3" data-audio-group="mix" data-start="7.40" data-duration="0.57" data-track-index="13" data-volume="0.16"></audio>
+      <audio id="sfx-station-a" src="assets/sfx/click-soft.mp3" data-audio-group="mix" data-start="9.66" data-duration="0.37" data-track-index="11" data-volume="0.26"></audio>
+      <audio id="sfx-station-d" src="assets/sfx/click-soft.mp3" data-audio-group="mix" data-start="10.88" data-duration="0.37" data-track-index="12" data-volume="0.26"></audio>
+      <audio id="sfx-cut-7" src="assets/sfx/whoosh-short.mp3" data-audio-group="mix" data-start="11.16" data-duration="0.57" data-track-index="13" data-volume="0.16"></audio>
+      <audio id="sfx-iris-8" src="assets/sfx/whoosh.mp3" data-audio-group="mix" data-start="12.92" data-duration="0.57" data-track-index="11" data-volume="0.2"></audio>
+      <audio id="sfx-period" src="assets/sfx/impact-bass-1.mp3" data-audio-group="mix" data-start="13.615" data-duration="1.3" data-track-index="12" data-volume="0.22"></audio>
+    </div>
+
+    <script>
+      (function () {
+        const FPS = 60;
+        const BEAT = 60 / 128;
+        const BAR = BEAT * 4;
+        const DUR = 15;
+
+        // Chrome palette per window (global seconds). Changes land on the cuts.
+        const WINDOWS = [
+          { at: 0, f: "ink" },
+          { at: 1.875, f: "verm" },
+          { at: 3.75, f: "ink" },
+          { at: 5.625, f: "paper" },
+          { at: 7.5, f: "cobalt" },
+          { at: 9.375, f: "yellow" },
+          { at: 11.25, f: "ink" },
+          { at: 13.125, f: "end" },
+          { at: 14.87, f: "ink" },
+        ];
+        const PAL = {
+          ink: { s: "#f2efe9", d: "#93908a", l: "#8f8b83", top: 1 },
+          verm: { s: "#121214", d: "#5a1d14", l: "#2a1310", top: 1 },
+          paper: { s: "#141416", d: "#6a665f", l: "#3a3833", top: 1 },
+          cobalt: { s: "#ffffff", d: "#d0d4ff", l: "#d7dcff", top: 1 },
+          yellow: { s: "#141416", d: "#5e4c14", l: "#2c2614", top: 1 },
+          end: { s: "#141416", d: "#6a665f", l: "#3a3833", top: 0 },
+        };
+
+        const chrome = document.getElementById("chrome");
+        const mTop = document.getElementById("m-top");
+        const mBar = document.getElementById("m-bar");
+        const mFrame = document.getElementById("m-frame");
+        const mTc = document.getElementById("m-tc");
+        const beatEls = Array.from(document.querySelectorAll("#beats i"));
+        const grain = document.getElementById("grain");
+        const pad = (n, w) => String(n).padStart(w, "0");
+
+        // seeded grain tile
+        (function makeGrain() {
+          const c = document.createElement("canvas");
+          c.width = 256;
+          c.height = 256;
+          const g = c.getContext("2d");
+          const img = g.createImageData(256, 256);
+          let s = 1337;
+          const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+          for (let i = 0; i < img.data.length; i += 4) {
+            const v = Math.floor(rnd() * 255);
+            img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+            img.data[i + 3] = 255;
+          }
+          g.putImageData(img, 0, 0);
+          grain.style.backgroundImage = "url(" + c.toDataURL() + ")";
+        })();
+
+        let lastF = "";
+        function paint(t) {
+          let w = WINDOWS[0];
+          for (const x of WINDOWS) if (t >= x.at - 1e-6) w = x;
+          if (w.f !== lastF) {
+            const p = PAL[w.f];
+            chrome.style.setProperty("--c-strong", p.s);
+            chrome.style.setProperty("--c-dim", p.d);
+            chrome.style.setProperty("--c-line", p.l);
+            lastF = w.f;
+          }
+          // top labels clear for the end card, return for the loop seam
+          let top = PAL[w.f].top;
+          if (w.f === "end") {
+            const u = Math.min(1, Math.max(0, (t - 13.125) / 0.2));
+            top = 1 - u;
+          }
+          mTop.style.opacity = top.toFixed(3);
+          const f = Math.min(899, Math.round(t * FPS));
+          const secs = Math.floor(f / FPS);
+          mFrame.textContent = "F" + pad(f, 4);
+          mTc.textContent = "00:00:" + pad(secs, 2) + ":" + pad(f % FPS, 2);
+          const k = Math.max(0, Math.floor((t + 0.002) / BEAT));
+          const bi = k % 4;
+          for (let i = 0; i < 4; i++) beatEls[i].classList.toggle("on", i === bi);
+          mBar.textContent = "BAR " + ((Math.floor(k / 4) % 8) + 1) + "/8";
+          // grain jitters every frame (deterministic offsets)
+          const gx = (f * 73) % 64;
+          const gy = (f * 151) % 64;
+          grain.style.transform = "translate(" + gx + "px," + gy + "px)";
+        }
+
+        const tl = gsap.timeline({ paused: true });
+        const clock = { v: 0 };
+        tl.to(clock, { v: 1, duration: DUR, ease: "none", onUpdate: () => paint(tl.time()) }, 0);
+        paint(0);
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>
